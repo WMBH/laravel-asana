@@ -1,0 +1,8 @@
+parameters:
+    ignoreErrors:
+        -
+            message: '#Unsafe usage of new static#'
+            path: src/Exceptions/AsanaException.php
+        -
+            message: '#Called .env. outside of the config directory#'
+            path: config/asana.php
