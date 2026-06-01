@@ -1,5 +1,7 @@
 <?php
 
+use Saloon\Http\Faking\MockClient;
+use Saloon\Http\Faking\MockResponse;
 use WMBH\Asana\Asana;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Resources\AttachmentResource;
@@ -54,8 +56,8 @@ test('getConnector returns the connector', function () {
 });
 
 test('testConnection returns true on success', function () {
-    $mockClient = new \Saloon\Http\Faking\MockClient([
-        \Saloon\Http\Faking\MockResponse::make(['data' => ['gid' => '1', 'name' => 'Test User']], 200),
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => ['gid' => '1', 'name' => 'Test User']], 200),
     ]);
 
     $connector = new AsanaConnector('test-token');
@@ -66,8 +68,8 @@ test('testConnection returns true on success', function () {
 });
 
 test('testConnection returns false on failure', function () {
-    $mockClient = new \Saloon\Http\Faking\MockClient([
-        \Saloon\Http\Faking\MockResponse::make(['errors' => [['message' => 'Not Authorized']]], 401),
+    $mockClient = new MockClient([
+        MockResponse::make(['errors' => [['message' => 'Not Authorized']]], 401),
     ]);
 
     $connector = new AsanaConnector('test-token');

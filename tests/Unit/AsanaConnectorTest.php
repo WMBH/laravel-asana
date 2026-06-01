@@ -1,5 +1,6 @@
 <?php
 
+use Saloon\Http\Auth\TokenAuthenticator;
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
 use WMBH\Asana\AsanaConnector;
@@ -22,7 +23,7 @@ test('connector uses token authentication', function () {
     $reflection = new ReflectionMethod($connector, 'defaultAuth');
     $auth = $reflection->invoke($connector);
 
-    expect($auth)->toBeInstanceOf(\Saloon\Http\Auth\TokenAuthenticator::class);
+    expect($auth)->toBeInstanceOf(TokenAuthenticator::class);
 });
 
 test('connector sets default headers', function () {
