@@ -2,6 +2,18 @@
 
 All notable changes to `laravel-asana` will be documented in this file.
 
+## v1.0.1 - 2026-06-02
+
+Maintenance release — repository and CI housekeeping. No changes to the package code; functionally identical to v1.0.0 for consumers.
+
+### Changed
+
+- CI: bumped `peter-evans/create-pull-request` to v8 (resolves Node.js 20 runner deprecation)
+- CI: bumped `dependabot/fetch-metadata` to v3
+- Repository: GitHub Actions can now create PRs and use auto-merge, so automated changelog updates and Dependabot auto-merge work as intended
+
+**Full Changelog**: https://github.com/WMBH/laravel-asana/compare/v1.0.0...v1.0.1
+
 ## v1.0.0 - 2026-06-01
 
 First stable release. Security-focused upgrade of the HTTP layer plus Laravel 13 support.
