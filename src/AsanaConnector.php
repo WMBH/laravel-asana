@@ -20,8 +20,6 @@ class AsanaConnector extends Connector
     public function __construct(
         protected readonly string $token,
         protected readonly int $timeout = 30,
-        protected readonly int $retryAttempts = 3,
-        protected readonly int $retrySleep = 1000,
     ) {}
 
     public function resolveBaseUrl(): string

@@ -20,7 +20,5 @@ class TestCase extends Orchestra
     {
         $app['config']->set('asana.token', 'test-token');
         $app['config']->set('asana.timeout', 30);
-        $app['config']->set('asana.retry.attempts', 3);
-        $app['config']->set('asana.retry.sleep', 1000);
     }
 }
