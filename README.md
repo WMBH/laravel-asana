@@ -319,6 +319,15 @@ Access via `Asana::projects()` — returns `ProjectResource`.
 | `getTaskCounts` | `string $gid` | `array` | Get task count breakdown |
 | `addCustomFieldSetting` | `string $gid`, `array $data`, `array $optFields = []` | `CustomFieldSettingData` | Add a custom field to a project (`custom_field`, `is_important`, `insert_before` / `insert_after`) |
 | `removeCustomFieldSetting` | `string $gid`, `string $customFieldGid` | `void` | Remove a custom field from a project |
+| `getForTask` | `string $taskGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?bool $includeInheritedProjects = null` | `PaginatedResponse` | List projects a task belongs to |
+| `getForWorkspace` | `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?bool $archived = null` | `PaginatedResponse` | List projects in a workspace (`/workspaces/{gid}/projects` route, supports `archived` filter) |
+| `createForTeam` | `string $teamGid`, `array $data`, `array $optFields = []` | `ProjectData` | Create a project in a team |
+| `createForWorkspace` | `string $workspaceGid`, `array $data`, `array $optFields = []` | `ProjectData` | Create a project in a workspace |
+| `search` | `string $workspaceGid`, `array $params = []`, `array $optFields = []` | `PaginatedResponse` | Search projects in a workspace (Asana advanced search params) |
+| `addMembers` | `string $gid`, `array $memberGids`, `array $optFields = []` | `ProjectData` | Add members to a project |
+| `removeMembers` | `string $gid`, `array $memberGids`, `array $optFields = []` | `ProjectData` | Remove members from a project |
+| `addFollowers` | `string $gid`, `array $followerGids`, `array $optFields = []` | `ProjectData` | Add followers to a project |
+| `removeFollowers` | `string $gid`, `array $followerGids`, `array $optFields = []` | `ProjectData` | Remove followers from a project |
 | `getMemberships` | `string $gid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project memberships (items are `ProjectMembershipData`) |
 | `getMembership` | `string $membershipGid`, `array $optFields = []` | `ProjectMembershipData` | Get a single project membership |
 | `saveAsTemplate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Save the project as a project template (async) |
@@ -360,10 +369,44 @@ $counts = Asana::projects()->getTaskCounts('project_gid');
 
 // List projects for a team
 $projects = Asana::projects()->getForTeam('team_gid');
+
+// Projects a task belongs to (including inherited from parent tasks)
+$projects = Asana::projects()->getForTask('task_gid', includeInheritedProjects: true);
+
+// Active projects in a workspace
+$projects = Asana::projects()->getForWorkspace('workspace_gid', archived: false);
+
+// Create directly in a team / workspace
+$project = Asana::projects()->createForTeam('team_gid', ['name' => 'Team Project']);
+$project = Asana::projects()->createForWorkspace('workspace_gid', ['name' => 'Workspace Project']);
+
+// Members and followers (returns the updated project)
+$project = Asana::projects()->addMembers('project_gid', ['user_gid_1', 'user_gid_2']);
+$project = Asana::projects()->removeMembers('project_gid', ['user_gid_1']);
+$project = Asana::projects()->addFollowers('project_gid', ['user_gid_1']);
+$project = Asana::projects()->removeFollowers('project_gid', ['user_gid_1']);
 // List who has access to a project
 $memberships = Asana::projects()->getMemberships('project_gid');
 foreach ($memberships->data as $membership) {
     echo "{$membership->member->name}: {$membership->access_level}";
+}
+```
+
+#### Project search
+
+`search()` mirrors Asana's advanced project search. Pass the raw Asana params (`text`, `sort_by`, `sort_ascending`, `completed`, `teams.any`, `owner.any`, `members.any`, `members.not`, `portfolios.any`, `due_on.before`, `created_on.after`, …) — booleans are preserved. The response has no pagination cursor.
+
+```php
+$results = Asana::projects()->search('workspace_gid', [
+    'text' => 'sprint',
+    'completed' => false,
+    'teams.any' => 'team_gid',
+    'sort_by' => 'name',
+    'sort_ascending' => true,
+], ['name', 'owner', 'due_on']);
+
+foreach ($results->data as $project) {
+    echo $project->name;
 }
 ```
 

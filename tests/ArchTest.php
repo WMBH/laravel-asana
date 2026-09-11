@@ -337,6 +337,24 @@ arch('RemoveCustomFieldSettingFromProjectRequest sends POST with JSON body')
     ->toSendPostRequest()
     ->toHaveJsonBody();
 
+arch('GetProjectsForWorkspaceRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Projects\GetProjectsForWorkspaceRequest')
+    ->toSendGetRequest();
+
+arch('SearchProjectsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Projects\SearchProjectsRequest')
+    ->toSendGetRequest();
+
+arch('CreateProjectForTeamRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Projects\CreateProjectForTeamRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('AddMembersToProjectRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Projects\AddMembersToProjectRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

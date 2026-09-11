@@ -293,3 +293,221 @@ test('removeCustomFieldSetting sends request with custom_field in body', functio
             && $request->body()->all() === ['data' => ['custom_field' => '900']];
     });
 });
+
+test('getForTask returns PaginatedResponse', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'name' => 'Parent Project', 'resource_type' => 'project'],
+            ],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->getForTask('task1', [], null, null, true);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(1)
+        ->and($result->data[0])->toBeInstanceOf(ProjectData::class)
+        ->and($result->data[0]->name)->toBe('Parent Project')
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/tasks/task1/projects'
+            && $request->query()->all() === ['include_inherited_projects' => true];
+    });
+});
+
+test('getForWorkspace returns PaginatedResponse', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'name' => 'Project 1', 'resource_type' => 'project'],
+                ['gid' => '2', 'name' => 'Project 2', 'resource_type' => 'project'],
+            ],
+            'next_page' => ['offset' => 'tok', 'uri' => '/workspaces/ws1/projects?offset=tok'],
+        ], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->getForWorkspace('ws1', ['name'], null, 2);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(2)
+        ->and($result->data[0])->toBeInstanceOf(ProjectData::class)
+        ->and($result->hasNextPage())->toBeTrue()
+        ->and($result->nextPageToken)->toBe('tok');
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/workspaces/ws1/projects'
+            && $request->query()->all() === ['opt_fields' => 'name', 'limit' => 2];
+    });
+});
+
+test('getForWorkspace keeps archived=false in the query', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [], 'next_page' => null], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $resource->getForWorkspace('ws1', archived: false);
+
+    $mockClient->assertSent(function ($request) {
+        return $request->query()->all() === ['archived' => false];
+    });
+});
+
+test('createForTeam returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '1001',
+            'name' => 'Team Project',
+            'resource_type' => 'project',
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->createForTeam('team1', ['name' => 'Team Project']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class)
+        ->and($result->gid)->toBe('1001')
+        ->and($result->name)->toBe('Team Project');
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/teams/team1/projects'
+            && $request->body()->all() === ['data' => ['name' => 'Team Project']];
+    });
+});
+
+test('createForWorkspace returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '1002',
+            'name' => 'Workspace Project',
+            'resource_type' => 'project',
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->createForWorkspace('ws1', ['name' => 'Workspace Project']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class)
+        ->and($result->gid)->toBe('1002');
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/workspaces/ws1/projects'
+            && $request->body()->all() === ['data' => ['name' => 'Workspace Project']];
+    });
+});
+
+test('search returns PaginatedResponse and passes params through', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'name' => 'Sprint 1', 'resource_type' => 'project'],
+            ],
+        ], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->search('ws1', ['text' => 'sprint', 'completed' => false, 'sort_by' => 'name'], ['name', 'owner']);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(1)
+        ->and($result->data[0])->toBeInstanceOf(ProjectData::class)
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/workspaces/ws1/projects/search'
+            && $request->query()->all() === [
+                'text' => 'sprint',
+                'completed' => false,
+                'sort_by' => 'name',
+                'opt_fields' => 'name,owner',
+            ];
+    });
+});
+
+test('addMembers returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '789',
+            'name' => 'Test Project',
+            'resource_type' => 'project',
+            'members' => [['gid' => 'u1'], ['gid' => 'u2']],
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->addMembers('789', ['u1', 'u2']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class)
+        ->and($result->members)->toHaveCount(2);
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/projects/789/addMembers'
+            && $request->body()->all() === ['data' => ['members' => 'u1,u2']];
+    });
+});
+
+test('removeMembers returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '789',
+            'name' => 'Test Project',
+            'resource_type' => 'project',
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->removeMembers('789', ['u1']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class)
+        ->and($result->gid)->toBe('789');
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/projects/789/removeMembers'
+            && $request->body()->all() === ['data' => ['members' => 'u1']];
+    });
+});
+
+test('addFollowers returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '789',
+            'name' => 'Test Project',
+            'resource_type' => 'project',
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->addFollowers('789', ['u1', 'u2']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class);
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/projects/789/addFollowers'
+            && $request->body()->all() === ['data' => ['followers' => 'u1,u2']];
+    });
+});
+
+test('removeFollowers returns ProjectData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '789',
+            'name' => 'Test Project',
+            'resource_type' => 'project',
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->removeFollowers('789', ['u2']);
+
+    expect($result)->toBeInstanceOf(ProjectData::class);
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/projects/789/removeFollowers'
+            && $request->body()->all() === ['data' => ['followers' => 'u2']];
+    });
+});

@@ -9,17 +9,26 @@ use WMBH\Asana\Data\ProjectData;
 use WMBH\Asana\Data\ProjectMembershipData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Requests\Projects\AddCustomFieldSettingToProjectRequest;
+use WMBH\Asana\Requests\Projects\AddFollowersToProjectRequest;
+use WMBH\Asana\Requests\Projects\AddMembersToProjectRequest;
+use WMBH\Asana\Requests\Projects\CreateProjectForTeamRequest;
+use WMBH\Asana\Requests\Projects\CreateProjectForWorkspaceRequest;
 use WMBH\Asana\Requests\Projects\CreateProjectRequest;
 use WMBH\Asana\Requests\Projects\DeleteProjectRequest;
 use WMBH\Asana\Requests\Projects\DuplicateProjectRequest;
 use WMBH\Asana\Requests\Projects\GetProjectMembershipRequest;
 use WMBH\Asana\Requests\Projects\GetProjectMembershipsRequest;
 use WMBH\Asana\Requests\Projects\GetProjectRequest;
+use WMBH\Asana\Requests\Projects\GetProjectsForTaskRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsForTeamRequest;
+use WMBH\Asana\Requests\Projects\GetProjectsForWorkspaceRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsRequest;
 use WMBH\Asana\Requests\Projects\GetTaskCountsRequest;
 use WMBH\Asana\Requests\Projects\RemoveCustomFieldSettingFromProjectRequest;
+use WMBH\Asana\Requests\Projects\RemoveFollowersFromProjectRequest;
+use WMBH\Asana\Requests\Projects\RemoveMembersFromProjectRequest;
 use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
+use WMBH\Asana\Requests\Projects\SearchProjectsRequest;
 use WMBH\Asana\Requests\Projects\UpdateProjectRequest;
 
 class ProjectResource
@@ -94,6 +103,69 @@ class ProjectResource
     public function removeCustomFieldSetting(string $gid, string $customFieldGid): void
     {
         $this->connector->send(new RemoveCustomFieldSettingFromProjectRequest($gid, $customFieldGid));
+    }
+
+    public function getForTask(string $taskGid, array $optFields = [], ?string $offset = null, ?int $limit = null, ?bool $includeInheritedProjects = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetProjectsForTaskRequest($taskGid, $optFields, $offset, $limit, $includeInheritedProjects));
+
+        return PaginatedResponse::fromResponse($response->json(), ProjectData::class);
+    }
+
+    public function getForWorkspace(string $workspaceGid, array $optFields = [], ?string $offset = null, ?int $limit = null, ?bool $archived = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetProjectsForWorkspaceRequest($workspaceGid, $optFields, $offset, $limit, $archived));
+
+        return PaginatedResponse::fromResponse($response->json(), ProjectData::class);
+    }
+
+    public function createForTeam(string $teamGid, array $data, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new CreateProjectForTeamRequest($teamGid, $data, $optFields));
+
+        return ProjectData::from($response->json('data'));
+    }
+
+    public function createForWorkspace(string $workspaceGid, array $data, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new CreateProjectForWorkspaceRequest($workspaceGid, $data, $optFields));
+
+        return ProjectData::from($response->json('data'));
+    }
+
+    public function search(string $workspaceGid, array $params = [], array $optFields = []): PaginatedResponse
+    {
+        $response = $this->connector->send(new SearchProjectsRequest($workspaceGid, $params, $optFields));
+
+        return PaginatedResponse::fromResponse($response->json(), ProjectData::class);
+    }
+
+    public function addMembers(string $gid, array $memberGids, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new AddMembersToProjectRequest($gid, $memberGids, $optFields));
+
+        return ProjectData::from($response->json('data'));
+    }
+
+    public function removeMembers(string $gid, array $memberGids, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new RemoveMembersFromProjectRequest($gid, $memberGids, $optFields));
+
+        return ProjectData::from($response->json('data'));
+    }
+
+    public function addFollowers(string $gid, array $followerGids, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new AddFollowersToProjectRequest($gid, $followerGids, $optFields));
+
+        return ProjectData::from($response->json('data'));
+    }
+
+    public function removeFollowers(string $gid, array $followerGids, array $optFields = []): ProjectData
+    {
+        $response = $this->connector->send(new RemoveFollowersFromProjectRequest($gid, $followerGids, $optFields));
+
+        return ProjectData::from($response->json('data'));
     }
 
     public function getMemberships(string $gid, ?string $userGid = null, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
