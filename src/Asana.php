@@ -6,6 +6,7 @@ use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
 use WMBH\Asana\Resources\GoalResource;
+use WMBH\Asana\Resources\JobResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectResource;
 use WMBH\Asana\Resources\ProjectTemplateResource;
@@ -50,6 +51,8 @@ class Asana
     private ?TaskTemplateResource $taskTemplateResource = null;
 
     private ?ProjectTemplateResource $projectTemplateResource = null;
+
+    private ?JobResource $jobResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -130,6 +133,11 @@ class Asana
     public function projectTemplates(): ProjectTemplateResource
     {
         return $this->projectTemplateResource ??= new ProjectTemplateResource($this->connector);
+    }
+
+    public function jobs(): JobResource
+    {
+        return $this->jobResource ??= new JobResource($this->connector);
     }
 
     public function batch(): BatchResource

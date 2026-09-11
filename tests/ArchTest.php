@@ -134,6 +134,10 @@ arch('DeleteProjectTemplateRequest sends DELETE')
     ->expect('WMBH\Asana\Requests\ProjectTemplates\DeleteProjectTemplateRequest')
     ->toSendDeleteRequest();
 
+arch('GetJobRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Jobs\GetJobRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

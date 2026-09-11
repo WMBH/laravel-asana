@@ -8,6 +8,7 @@ use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
 use WMBH\Asana\Resources\GoalResource;
+use WMBH\Asana\Resources\JobResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectResource;
 use WMBH\Asana\Resources\ProjectTemplateResource;
@@ -40,6 +41,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->webhooks())->toBeInstanceOf(WebhookResource::class)
         ->and($asana->taskTemplates())->toBeInstanceOf(TaskTemplateResource::class)
         ->and($asana->projectTemplates())->toBeInstanceOf(ProjectTemplateResource::class)
+        ->and($asana->jobs())->toBeInstanceOf(JobResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 

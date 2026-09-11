@@ -76,6 +76,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Portfolios](#portfolios)
 - [Goals](#goals)
 - [Webhooks](#webhooks)
+- [Jobs](#jobs)
 - [Batch Requests](#batch-requests)
 - [Error Handling](#error-handling)
 - [Pagination](#pagination)
@@ -1013,6 +1014,44 @@ Asana::webhooks()->delete('webhook_gid');
 | `last_failure_content` | `?string` | Last failure details |
 | `last_success_at` | `?string` | Last success timestamp |
 | `filters` | `?array` | Event filters |
+
+---
+
+### Jobs
+
+Access via `Asana::jobs()` — returns `JobResource`. Asynchronous operations (`tasks()->duplicate()`, `projects()->duplicate()`, `projects()->saveAsTemplate()`, `taskTemplates()->instantiate()`, `projectTemplates()->instantiate()`) return a `JobData`; poll it here.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `JobData` | Get a job's status and result |
+
+```php
+$job = Asana::tasks()->duplicate('task_gid', ['name' => 'Copy', 'include' => 'notes,assignee']);
+
+do {
+    sleep(1);
+    $job = Asana::jobs()->get($job->gid);
+} while (in_array($job->status, ['not_started', 'in_progress'], true));
+
+if ($job->status === 'succeeded') {
+    $newTaskGid = $job->new_task->gid;
+}
+```
+
+#### JobData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"job"` |
+| `resource_subtype` | `?string` | `"duplicate_task"`, `"duplicate_project"`, `"instantiate_task"`, `"instantiate_project"`, `"save_as_template"`, … |
+| `status` | `?string` | `"not_started"`, `"in_progress"`, `"succeeded"`, or `"failed"` |
+| `new_task` | `?CompactResource` | Resulting task, if any |
+| `new_project` | `?CompactResource` | Resulting project, if any |
+| `new_portfolio` | `?CompactResource` | Resulting portfolio, if any |
+| `new_project_template` | `?CompactResource` | Resulting project template, if any |
+| `new_graph_export` | `?array` | Resulting graph export (`download_url`, `completed_at`), if any |
+| `new_resource_export` | `?array` | Resulting resource export, if any |
 
 ---
 
