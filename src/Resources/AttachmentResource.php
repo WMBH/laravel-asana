@@ -8,7 +8,7 @@ use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Requests\Attachments\CreateAttachmentRequest;
 use WMBH\Asana\Requests\Attachments\DeleteAttachmentRequest;
 use WMBH\Asana\Requests\Attachments\GetAttachmentRequest;
-use WMBH\Asana\Requests\Attachments\GetAttachmentsForTaskRequest;
+use WMBH\Asana\Requests\Attachments\GetAttachmentsForObjectRequest;
 
 class AttachmentResource
 {
@@ -23,11 +23,16 @@ class AttachmentResource
         return AttachmentData::from($response->json('data'));
     }
 
-    public function getForTask(string $taskGid, array $optFields = []): PaginatedResponse
+    public function getForObject(string $parentGid, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
     {
-        $response = $this->connector->send(new GetAttachmentsForTaskRequest($taskGid, $optFields));
+        $response = $this->connector->send(new GetAttachmentsForObjectRequest($parentGid, $optFields, $offset, $limit));
 
         return PaginatedResponse::fromResponse($response->json(), AttachmentData::class);
+    }
+
+    public function getForTask(string $taskGid, array $optFields = []): PaginatedResponse
+    {
+        return $this->getForObject($taskGid, $optFields);
     }
 
     public function create(string $parentGid, array $data): AttachmentData

@@ -2,6 +2,7 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Data\TeamData;
@@ -51,6 +52,8 @@ test('getForWorkspace returns PaginatedResponse', function () {
     expect($result)->toBeInstanceOf(PaginatedResponse::class)
         ->and($result->data)->toHaveCount(2)
         ->and($result->data[0])->toBeInstanceOf(TeamData::class);
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/workspaces/ws1/teams');
 });
 
 test('getForUser returns PaginatedResponse', function () {

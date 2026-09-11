@@ -18,7 +18,7 @@ class GetTeamsForWorkspaceRequest extends Request
 
     public function resolveEndpoint(): string
     {
-        return "/organizations/{$this->workspaceGid}/teams";
+        return "/workspaces/{$this->workspaceGid}/teams";
     }
 
     protected function defaultQuery(): array

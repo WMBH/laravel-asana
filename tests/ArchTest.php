@@ -99,6 +99,10 @@ arch('all exceptions extend AsanaException')
     ->toExtend('WMBH\Asana\Exceptions\AsanaException')
     ->ignoring('WMBH\Asana\Exceptions\AsanaException');
 
+arch('GetAttachmentsForObjectRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Attachments\GetAttachmentsForObjectRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

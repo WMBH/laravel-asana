@@ -612,6 +612,7 @@ Access via `Asana::attachments()` — returns `AttachmentResource`.
 |--------|-----------|---------|-------------|
 | `get` | `string $gid`, `array $optFields = []` | `AttachmentData` | Get an attachment |
 | `getForTask` | `string $taskGid`, `array $optFields = []` | `PaginatedResponse` | List attachments on a task |
+| `getForObject` | `string $parentGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List attachments on a task, project or project brief |
 | `create` | `string $parentGid`, `array $data` | `AttachmentData` | Create an attachment |
 | `delete` | `string $gid` | `bool` | Delete an attachment |
 
@@ -798,8 +799,8 @@ Access via `Asana::goals()` — returns `GoalResource`.
 | `create` | `array $data` | `GoalData` | Create a goal |
 | `update` | `string $gid`, `array $data` | `GoalData` | Update a goal |
 | `delete` | `string $gid` | `bool` | Delete a goal |
-| `getSubgoals` | `string $goalGid` | `PaginatedResponse` | List subgoals |
-| `addSubgoal` | `string $goalGid`, `string $subgoalGid` | `bool` | Add a subgoal |
+| `getSubgoals` | `string $goalGid` | `PaginatedResponse` | List subgoals (items are `CompactResource`) |
+| `addSubgoal` | `string $goalGid`, `string $subgoalGid` | `bool` | Add a subgoal (creates a supporting relationship) |
 | `getRelationships` | `string $goalGid` | `PaginatedResponse` | List supporting work (projects/portfolios) |
 | `updateMetric` | `string $goalGid`, `array $data` | `GoalData` | Update the goal's progress metric |
 
