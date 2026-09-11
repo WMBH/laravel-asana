@@ -165,6 +165,45 @@ arch('GetTagsRequest sends GET')
     ->expect('WMBH\Asana\Requests\Tags\GetTagsRequest')
     ->toSendGetRequest();
 
+arch('GetStatusUpdateRequest sends GET')
+    ->expect('WMBH\Asana\Requests\StatusUpdates\GetStatusUpdateRequest')
+    ->toSendGetRequest();
+
+arch('CreateStatusUpdateRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\StatusUpdates\CreateStatusUpdateRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('DeleteStatusUpdateRequest sends DELETE')
+    ->expect('WMBH\Asana\Requests\StatusUpdates\DeleteStatusUpdateRequest')
+    ->toSendDeleteRequest();
+
+arch('GetProjectBriefRequest sends GET')
+    ->expect('WMBH\Asana\Requests\ProjectBriefs\GetProjectBriefRequest')
+    ->toSendGetRequest();
+
+arch('CreateProjectBriefRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\ProjectBriefs\CreateProjectBriefRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('UpdateProjectBriefRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\ProjectBriefs\UpdateProjectBriefRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('DeleteProjectBriefRequest sends DELETE')
+    ->expect('WMBH\Asana\Requests\ProjectBriefs\DeleteProjectBriefRequest')
+    ->toSendDeleteRequest();
+
+arch('GetEventsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Events\GetEventsRequest')
+    ->toSendGetRequest();
+
+arch('GetWorkspaceEventsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Events\GetWorkspaceEventsRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')
@@ -179,4 +218,5 @@ arch('all DTOs extend Data')
     ->ignoring([
         'WMBH\Asana\Data\Shared\PaginatedResponse',
         'WMBH\Asana\Data\Shared\ErrorResponse',
+        'WMBH\Asana\Data\Shared\EventsResponse',
     ]);

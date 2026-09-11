@@ -76,6 +76,9 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Portfolios](#portfolios)
 - [Goals](#goals)
 - [Webhooks](#webhooks)
+- [Status Updates](#status-updates)
+- [Project Briefs](#project-briefs)
+- [Events](#events)
 - [Jobs](#jobs)
 - [Batch Requests](#batch-requests)
 - [Error Handling](#error-handling)
@@ -1040,6 +1043,136 @@ Asana::webhooks()->delete('webhook_gid');
 | `last_failure_content` | `?string` | Last failure details |
 | `last_success_at` | `?string` | Last success timestamp |
 | `filters` | `?array` | Event filters |
+
+---
+
+### Status Updates
+
+Access via `Asana::statusUpdates()` — returns `StatusUpdateResource`. Status updates work on projects, portfolios and goals (Asana's replacement for the deprecated project statuses).
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `StatusUpdateData` | Get a status update |
+| `getForObject` | `string $parentGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?string $createdSince = null` | `PaginatedResponse` | List status updates on a project/portfolio/goal |
+| `create` | `string $parentGid`, `array $data`, `array $optFields = []` | `StatusUpdateData` | Post a status update |
+| `delete` | `string $gid` | `bool` | Delete a status update |
+
+```php
+// Post a project status
+$update = Asana::statusUpdates()->create('project_gid', [
+    'text' => 'Shipping on Friday',
+    'status_type' => 'on_track', // on_track, at_risk, off_track, on_hold, complete, achieved, partial, missed, dropped
+]);
+
+// Latest updates since a date
+$updates = Asana::statusUpdates()->getForObject('project_gid', createdSince: '2025-01-01T00:00:00Z');
+```
+
+#### StatusUpdateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"status_update"` |
+| `resource_subtype` | `?string` | `"project_status_update"`, `"portfolio_status_update"` or `"goal_status_update"` |
+| `title` | `?string` | Title |
+| `text` | `?string` | Plain-text body |
+| `html_text` | `?string` | HTML body |
+| `status_type` | `?string` | `"on_track"`, `"at_risk"`, `"off_track"`, `"on_hold"`, `"complete"`, ... |
+| `author` | `?CompactResource` | Author |
+| `created_at` | `?string` | Creation timestamp |
+| `created_by` | `?CompactResource` | Creator |
+| `modified_at` | `?string` | Last modified timestamp |
+| `hearted` | `?bool` | Whether the current user hearted it |
+| `hearts` | `?array` | Users who hearted it |
+| `liked` | `?bool` | Whether the current user liked it |
+| `likes` | `?array` | Users who liked it |
+| `reaction_summary` | `?array` | Reaction counts |
+| `num_hearts` | `?int` | Number of hearts |
+| `num_likes` | `?int` | Number of likes |
+| `parent` | `?CompactResource` | Project, portfolio or goal the update belongs to |
+
+---
+
+### Project Briefs
+
+Access via `Asana::projectBriefs()` — returns `ProjectBriefResource`. A project has at most one brief.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `ProjectBriefData` | Get a project brief |
+| `create` | `string $projectGid`, `array $data`, `array $optFields = []` | `ProjectBriefData` | Create the brief for a project |
+| `update` | `string $gid`, `array $data`, `array $optFields = []` | `ProjectBriefData` | Update a brief |
+| `delete` | `string $gid` | `bool` | Delete a brief |
+
+```php
+$brief = Asana::projectBriefs()->create('project_gid', [
+    'title' => 'Launch plan',
+    'html_text' => '<body><strong>Goal:</strong> ship in Q3</body>',
+]);
+
+Asana::projectBriefs()->update($brief->gid, ['title' => 'Launch plan v2']);
+```
+
+#### ProjectBriefData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_brief"` |
+| `title` | `?string` | Title |
+| `html_text` | `?string` | HTML body |
+| `text` | `?string` | Plain-text body |
+| `permalink_url` | `?string` | URL to the brief in Asana |
+| `project` | `?CompactResource` | Owning project |
+
+---
+
+### Events
+
+Access via `Asana::events()` — returns `EventResource`. Events are a polling feed of changes on a project, task or workspace, driven by a `sync` token.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $resourceGid`, `?string $sync = null`, `array $optFields = []` | `EventsResponse` | Events on a project or task since `$sync` |
+| `getForWorkspace` | `string $workspaceGid`, `?string $sync = null` | `EventsResponse` | Events across a workspace since `$sync` |
+
+The first call has no token. Asana answers it with HTTP 412 and a fresh token; this package turns that into an `EventsResponse` with empty `data` and the token in `sync`, so the loop below just works:
+
+```php
+$page = Asana::events()->get('project_gid');           // first call: data = [], sync = fresh token
+$sync = $page->sync;
+
+do {
+    $page = Asana::events()->get('project_gid', $sync);
+    foreach ($page->data as $event) {
+        echo "{$event->type} {$event->action} on {$event->resource?->gid}\n";
+    }
+    $sync = $page->sync;
+} while ($page->hasMore);
+```
+
+#### EventsResponse Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `array` | Array of `EventData` |
+| `sync` | `?string` | Token to pass to the next call |
+| `hasMore` | `bool` | Whether more events are waiting (Asana caps a page at 100) |
+
+#### EventData Properties
+
+Events have no `gid`; every property is nullable.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `user` | `?CompactResource` | User who triggered the event |
+| `resource` | `?CompactResource` | Resource that changed |
+| `type` | `?string` | Resource type (`"task"`, `"project"`, `"story"`, ...) |
+| `action` | `?string` | `"added"`, `"removed"`, `"changed"`, `"deleted"`, `"undeleted"` |
+| `parent` | `?CompactResource` | Parent of the changed resource |
+| `created_at` | `?string` | Event timestamp |
+| `change` | `?array` | Field-level change (`field`, `action`, `new_value`, `added_value`, `removed_value`) |
 
 ---
 

@@ -5,12 +5,15 @@ namespace WMBH\Asana;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
+use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\JobResource;
 use WMBH\Asana\Resources\PortfolioResource;
+use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
 use WMBH\Asana\Resources\ProjectTemplateResource;
 use WMBH\Asana\Resources\SectionResource;
+use WMBH\Asana\Resources\StatusUpdateResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
 use WMBH\Asana\Resources\TaskResource;
@@ -53,6 +56,12 @@ class Asana
     private ?ProjectTemplateResource $projectTemplateResource = null;
 
     private ?JobResource $jobResource = null;
+
+    private ?StatusUpdateResource $statusUpdateResource = null;
+
+    private ?ProjectBriefResource $projectBriefResource = null;
+
+    private ?EventResource $eventResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -138,6 +147,21 @@ class Asana
     public function jobs(): JobResource
     {
         return $this->jobResource ??= new JobResource($this->connector);
+    }
+
+    public function statusUpdates(): StatusUpdateResource
+    {
+        return $this->statusUpdateResource ??= new StatusUpdateResource($this->connector);
+    }
+
+    public function projectBriefs(): ProjectBriefResource
+    {
+        return $this->projectBriefResource ??= new ProjectBriefResource($this->connector);
+    }
+
+    public function events(): EventResource
+    {
+        return $this->eventResource ??= new EventResource($this->connector);
     }
 
     public function batch(): BatchResource
