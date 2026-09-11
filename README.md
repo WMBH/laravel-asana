@@ -605,6 +605,10 @@ Access via `Asana::teams()` — returns `TeamResource`.
 | `create` | `array $data` | `TeamData` | Create a team |
 | `addUser` | `string $teamGid`, `string $userGid` | `void` | Add a user to a team |
 | `removeUser` | `string $teamGid`, `string $userGid` | `void` | Remove a user from a team |
+| `update` | `string $gid`, `array $data`, `array $optFields = []` | `TeamData` | Update a team |
+| `getMemberships` | `?string $teamGid = null`, `?string $userGid = null`, `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List team memberships filtered by team, user and/or workspace (items are `TeamMembershipData`) |
+| `getMembershipsForTeam` | `string $teamGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List memberships of a team |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `TeamMembershipData` | Get a single team membership |
 
 ```php
 // List teams in a workspace
@@ -623,6 +627,14 @@ $team = Asana::teams()->create([
 // Manage members
 Asana::teams()->addUser('team_gid', 'user_gid');
 Asana::teams()->removeUser('team_gid', 'user_gid');
+// Rename a team
+Asana::teams()->update('team_gid', ['name' => 'Platform']);
+
+// Who is on the team, and are they admins?
+$memberships = Asana::teams()->getMembershipsForTeam('team_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->user->name} admin=" . var_export($membership->is_admin, true);
+}
 ```
 
 #### TeamData Properties
@@ -636,6 +648,19 @@ Asana::teams()->removeUser('team_gid', 'user_gid');
 | `html_description` | `?string` | HTML description |
 | `organization` | `?CompactResource` | Parent organization |
 | `permalink_url` | `?string` | URL to the team in Asana |
+
+
+#### TeamMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"team_membership"` |
+| `user` | `?CompactResource` | The user |
+| `team` | `?CompactResource` | The team |
+| `is_guest` | `?bool` | Whether the user is a guest in the team |
+| `is_limited_access` | `?bool` | Whether the user has limited access |
+| `is_admin` | `?bool` | Whether the user is a team admin |
 
 ---
 

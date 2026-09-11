@@ -267,6 +267,19 @@ arch('GetProjectMembershipRequest sends GET')
     ->expect('WMBH\Asana\Requests\Projects\GetProjectMembershipRequest')
     ->toSendGetRequest();
 
+arch('UpdateTeamRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\Teams\UpdateTeamRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('GetTeamMembershipsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Teams\GetTeamMembershipsRequest')
+    ->toSendGetRequest();
+
+arch('GetTeamMembershipRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Teams\GetTeamMembershipRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')
