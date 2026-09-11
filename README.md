@@ -563,6 +563,9 @@ Access via `Asana::workspaces()` — returns `WorkspaceResource`.
 | `update` | `string $gid`, `array $data` | `WorkspaceData` | Update a workspace |
 | `addUser` | `string $workspaceGid`, `string $userGid` | `void` | Add a user to a workspace |
 | `removeUser` | `string $workspaceGid`, `string $userGid` | `void` | Remove a user from a workspace |
+| `getMemberships` | `string $workspaceGid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List workspace memberships (items are `WorkspaceMembershipData`) |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `WorkspaceMembershipData` | Get a single workspace membership |
+| `typeahead` | `string $workspaceGid`, `string $resourceType`, `?string $query = null`, `?int $count = null`, `array $optFields = []` | `PaginatedResponse` | Search-as-you-type across `user`, `project`, `task`, `tag`, `team`, `portfolio`, `goal`, `custom_field` (items are `CompactResource`) |
 
 ```php
 // List all workspaces
@@ -579,6 +582,17 @@ Asana::workspaces()->update('workspace_gid', ['name' => 'New Name']);
 // Manage members
 Asana::workspaces()->addUser('workspace_gid', 'user_gid');
 Asana::workspaces()->removeUser('workspace_gid', 'user_gid');
+// Who is in the workspace, and are they guests?
+$memberships = Asana::workspaces()->getMemberships('workspace_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->user->name} guest=" . var_export($membership->is_guest, true);
+}
+
+// Typeahead: find projects whose name matches "Marketing"
+$matches = Asana::workspaces()->typeahead('workspace_gid', 'project', 'Marketing', 5);
+foreach ($matches->data as $match) {
+    echo "{$match->gid}: {$match->name}";
+}
 ```
 
 #### WorkspaceData Properties
@@ -590,6 +604,23 @@ Asana::workspaces()->removeUser('workspace_gid', 'user_gid');
 | `name` | `?string` | Workspace name |
 | `is_organization` | `?bool` | Whether it's an organization |
 | `email_domains` | `?array` | Email domains for the workspace |
+
+
+#### WorkspaceMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"workspace_membership"` |
+| `user` | `?CompactResource` | The user |
+| `workspace` | `?CompactResource` | The workspace |
+| `user_task_list` | `?CompactResource` | The user's "My Tasks" list in this workspace |
+| `is_active` | `?bool` | Whether the membership is active |
+| `is_admin` | `?bool` | Whether the user is a workspace admin |
+| `is_guest` | `?bool` | Whether the user is a guest |
+| `is_view_only` | `?bool` | Whether the user has view-only access |
+| `vacation_dates` | `?array` | `['start_on' => ..., 'end_on' => ...]` when out of office |
+| `created_at` | `?string` | Creation timestamp |
 
 ---
 

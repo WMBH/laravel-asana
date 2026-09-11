@@ -8192,7 +8192,7 @@ class TypeaheadRequest extends Request
     public function __construct(
         protected readonly string $workspaceGid,
         protected readonly string $resourceType,
-        protected readonly ?string $query = null,
+        protected readonly ?string $search = null,
         protected readonly ?int $count = null,
         protected readonly array $optFields = [],
     ) {}
@@ -8206,7 +8206,7 @@ class TypeaheadRequest extends Request
     {
         return array_filter([
             'resource_type' => $this->resourceType,
-            'query' => $this->query,
+            'query' => $this->search,
             'count' => $this->count,
             'opt_fields' => $this->optFields ? implode(',', $this->optFields) : null,
         ]);

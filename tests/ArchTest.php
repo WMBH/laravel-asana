@@ -280,6 +280,18 @@ arch('GetTeamMembershipRequest sends GET')
     ->expect('WMBH\Asana\Requests\Teams\GetTeamMembershipRequest')
     ->toSendGetRequest();
 
+arch('GetWorkspaceMembershipsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Workspaces\GetWorkspaceMembershipsRequest')
+    ->toSendGetRequest();
+
+arch('GetWorkspaceMembershipRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Workspaces\GetWorkspaceMembershipRequest')
+    ->toSendGetRequest();
+
+arch('TypeaheadRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Workspaces\TypeaheadRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')
