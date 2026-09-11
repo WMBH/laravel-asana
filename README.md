@@ -82,6 +82,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Custom Types](#custom-types)
 - [User Task Lists](#user-task-lists)
 - [Access Requests](#access-requests)
+- [Reactions](#reactions)
 - [Jobs](#jobs)
 - [Batch Requests](#batch-requests)
 - [Error Handling](#error-handling)
@@ -1261,6 +1262,31 @@ foreach ($pending->data as $request) {
 | `approval_status` | `?string` | `"pending"`, `"approved"` or `"rejected"` |
 | `requester` | `?CompactResource` | Requesting user |
 | `target` | `?CompactResource` | Project or portfolio requested |
+
+---
+
+### Reactions
+
+Access via `Asana::reactions()` — returns `ReactionResource`. Lists who reacted to a task, story or status update with a given emoji. `$emojiBase` is the emoji without skin-tone modifiers; results include every variant.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `getForObject` | `string $targetGid`, `string $emojiBase`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | Reactions with `$emojiBase` on the target |
+
+```php
+$thumbs = Asana::reactions()->getForObject('task_gid', '👍');
+foreach ($thumbs->data as $reaction) {
+    echo "{$reaction->user->gid} reacted {$reaction->emoji}\n";
+}
+```
+
+#### ReactionData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `emoji` | `?string` | The exact emoji used (may include a skin-tone variant) |
+| `user` | `?CompactResource` | User who reacted |
 
 ---
 

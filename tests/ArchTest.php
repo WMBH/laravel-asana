@@ -237,6 +237,10 @@ arch('RejectAccessRequestRequest sends POST')
     ->expect('WMBH\Asana\Requests\AccessRequests\RejectAccessRequestRequest')
     ->toSendPostRequest();
 
+arch('GetReactionsForObjectRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Reactions\GetReactionsForObjectRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

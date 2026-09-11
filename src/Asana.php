@@ -14,6 +14,7 @@ use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
 use WMBH\Asana\Resources\ProjectTemplateResource;
+use WMBH\Asana\Resources\ReactionResource;
 use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StatusUpdateResource;
 use WMBH\Asana\Resources\StoryResource;
@@ -71,6 +72,8 @@ class Asana
     private ?UserTaskListResource $userTaskListResource = null;
 
     private ?AccessRequestResource $accessRequestResource = null;
+
+    private ?ReactionResource $reactionResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -186,6 +189,11 @@ class Asana
     public function accessRequests(): AccessRequestResource
     {
         return $this->accessRequestResource ??= new AccessRequestResource($this->connector);
+    }
+
+    public function reactions(): ReactionResource
+    {
+        return $this->reactionResource ??= new ReactionResource($this->connector);
     }
 
     public function batch(): BatchResource

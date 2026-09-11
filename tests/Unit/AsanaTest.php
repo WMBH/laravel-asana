@@ -16,6 +16,7 @@ use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
 use WMBH\Asana\Resources\ProjectTemplateResource;
+use WMBH\Asana\Resources\ReactionResource;
 use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StatusUpdateResource;
 use WMBH\Asana\Resources\StoryResource;
@@ -54,6 +55,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->customTypes())->toBeInstanceOf(CustomTypeResource::class)
         ->and($asana->userTaskLists())->toBeInstanceOf(UserTaskListResource::class)
         ->and($asana->accessRequests())->toBeInstanceOf(AccessRequestResource::class)
+        ->and($asana->reactions())->toBeInstanceOf(ReactionResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 
