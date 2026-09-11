@@ -317,6 +317,8 @@ Access via `Asana::projects()` — returns `ProjectResource`.
 | `delete` | `string $gid` | `bool` | Delete a project |
 | `duplicate` | `string $gid`, `array $data` | `array` | Duplicate a project (returns job) |
 | `getTaskCounts` | `string $gid` | `array` | Get task count breakdown |
+| `getMemberships` | `string $gid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project memberships (items are `ProjectMembershipData`) |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `ProjectMembershipData` | Get a single project membership |
 | `saveAsTemplate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Save the project as a project template (async) |
 
 ```php
@@ -356,6 +358,11 @@ $counts = Asana::projects()->getTaskCounts('project_gid');
 
 // List projects for a team
 $projects = Asana::projects()->getForTeam('team_gid');
+// List who has access to a project
+$memberships = Asana::projects()->getMemberships('project_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->member->name}: {$membership->access_level}";
+}
 ```
 
 #### ProjectData Properties
@@ -385,6 +392,21 @@ $projects = Asana::projects()->getForTeam('team_gid');
 | `custom_fields` | `?array` | Custom field values |
 | `members` | `?array` | Project members |
 | `followers` | `?array` | Project followers |
+
+
+#### ProjectMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_membership"` |
+| `resource_subtype` | `?string` | Membership subtype |
+| `parent` | `?CompactResource` | The project |
+| `member` | `?CompactResource` | The user or team |
+| `access_level` | `?string` | `"admin"`, `"editor"`, `"commenter"`, or `"viewer"` |
+| `user` | `?CompactResource` | The user (when member is a user) |
+| `project` | `?CompactResource` | The project |
+| `write_access` | `?string` | `"full_write"` or `"comment_only"` |
 
 ---
 

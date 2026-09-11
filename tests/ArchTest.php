@@ -259,6 +259,14 @@ arch('DeleteMembershipRequest sends DELETE')
     ->expect('WMBH\Asana\Requests\Memberships\DeleteMembershipRequest')
     ->toSendDeleteRequest();
 
+arch('GetProjectMembershipsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Projects\GetProjectMembershipsRequest')
+    ->toSendGetRequest();
+
+arch('GetProjectMembershipRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Projects\GetProjectMembershipRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

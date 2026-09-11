@@ -6,6 +6,7 @@ use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
+use WMBH\Asana\Data\ProjectMembershipData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
 use WMBH\Asana\Resources\ProjectResource;
@@ -171,4 +172,81 @@ test('saveAsTemplate returns JobData', function () {
     $mockClient->assertSent(fn (Request $request) => $request instanceof SaveProjectAsTemplateRequest
         && $request->resolveEndpoint() === '/projects/p1/saveAsTemplate'
         && $request->body()->all() === ['data' => ['name' => 'Sprint', 'team' => 'team1', 'public' => true]]);
+});
+
+test('getMemberships returns PaginatedResponse of ProjectMembershipData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'resource_type' => 'project_membership', 'access_level' => 'editor'],
+                ['gid' => '2', 'resource_type' => 'project_membership', 'access_level' => 'viewer'],
+            ],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->getMemberships('proj1');
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(2)
+        ->and($result->data[0])->toBeInstanceOf(ProjectMembershipData::class)
+        ->and($result->data[0]->access_level)->toBe('editor')
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/projects/proj1/project_memberships');
+});
+
+test('getMemberships sends user filter and pagination as query params', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [], 'next_page' => null], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $resource->getMemberships('proj1', 'user1', ['access_level'], 'abc', 25);
+
+    $mockClient->assertSent(fn (Request $request) => $request->query()->all() === [
+        'user' => 'user1',
+        'opt_fields' => 'access_level',
+        'offset' => 'abc',
+        'limit' => 25,
+    ]);
+});
+
+test('getMemberships handles pagination', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [['gid' => '1', 'resource_type' => 'project_membership']],
+            'next_page' => ['offset' => 'tok', 'uri' => '/projects/proj1/project_memberships?offset=tok'],
+        ], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->getMemberships('proj1');
+
+    expect($result->hasNextPage())->toBeTrue()
+        ->and($result->nextPageToken)->toBe('tok');
+});
+
+test('getMembership returns ProjectMembershipData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '700',
+            'resource_type' => 'project_membership',
+            'access_level' => 'admin',
+            'write_access' => 'full_write',
+            'user' => ['gid' => '2', 'name' => 'Jane', 'resource_type' => 'user'],
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->getMembership('700', ['write_access']);
+
+    expect($result)->toBeInstanceOf(ProjectMembershipData::class)
+        ->and($result->gid)->toBe('700')
+        ->and($result->write_access)->toBe('full_write')
+        ->and($result->user->name)->toBe('Jane');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/project_memberships/700'
+        && $request->query()->all() === ['opt_fields' => 'write_access']);
 });

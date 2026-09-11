@@ -5,10 +5,13 @@ namespace WMBH\Asana\Resources;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
+use WMBH\Asana\Data\ProjectMembershipData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Requests\Projects\CreateProjectRequest;
 use WMBH\Asana\Requests\Projects\DeleteProjectRequest;
 use WMBH\Asana\Requests\Projects\DuplicateProjectRequest;
+use WMBH\Asana\Requests\Projects\GetProjectMembershipRequest;
+use WMBH\Asana\Requests\Projects\GetProjectMembershipsRequest;
 use WMBH\Asana\Requests\Projects\GetProjectRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsForTeamRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsRequest;
@@ -76,6 +79,20 @@ class ProjectResource
         $response = $this->connector->send(new GetTaskCountsRequest($gid));
 
         return $response->json('data');
+    }
+
+    public function getMemberships(string $gid, ?string $userGid = null, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetProjectMembershipsRequest($gid, $userGid, $optFields, $offset, $limit));
+
+        return PaginatedResponse::fromResponse($response->json(), ProjectMembershipData::class);
+    }
+
+    public function getMembership(string $membershipGid, array $optFields = []): ProjectMembershipData
+    {
+        $response = $this->connector->send(new GetProjectMembershipRequest($membershipGid, $optFields));
+
+        return ProjectMembershipData::from($response->json('data'));
     }
 
     public function saveAsTemplate(string $gid, array $data, array $optFields = []): JobData
