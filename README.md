@@ -64,6 +64,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Task Search (Query Builder)](#task-search-query-builder)
 - [Task Templates](#task-templates)
 - [Projects](#projects)
+- [Project Templates](#project-templates)
 - [Sections](#sections)
 - [Users](#users)
 - [Workspaces](#workspaces)
@@ -285,6 +286,7 @@ Access via `Asana::projects()` — returns `ProjectResource`.
 | `delete` | `string $gid` | `bool` | Delete a project |
 | `duplicate` | `string $gid`, `array $data` | `array` | Duplicate a project (returns job) |
 | `getTaskCounts` | `string $gid` | `array` | Get task count breakdown |
+| `saveAsTemplate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Save the project as a project template (async) |
 
 ```php
 // List projects in a workspace
@@ -352,6 +354,56 @@ $projects = Asana::projects()->getForTeam('team_gid');
 | `custom_fields` | `?array` | Custom field values |
 | `members` | `?array` | Project members |
 | `followers` | `?array` | Project followers |
+
+---
+
+### Project Templates
+
+Access via `Asana::projectTemplates()` — returns `ProjectTemplateResource`. Instantiating a template is asynchronous: poll the returned job with [`Asana::jobs()->get()`](#jobs) and read `new_project` once `status` is `succeeded`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $workspaceGid = null`, `?string $teamGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project templates (filter by workspace or team) |
+| `getForTeam` | `string $teamGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project templates in a team |
+| `get` | `string $gid`, `array $optFields = []` | `ProjectTemplateData` | Get a project template |
+| `delete` | `string $gid` | `bool` | Delete a project template |
+| `instantiate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Create a project from the template (async) |
+
+```php
+// List templates in a workspace
+$templates = Asana::projectTemplates()->list('workspace_gid');
+
+// Create a project from a template
+$job = Asana::projectTemplates()->instantiate('template_gid', [
+    'name' => 'Sprint 42',
+    'team' => 'team_gid',
+    'public' => false,
+    'requested_dates' => [['gid' => 'requested_date_gid', 'value' => '2026-10-01']],
+]);
+
+// Save an existing project as a template
+$job = Asana::projects()->saveAsTemplate('project_gid', [
+    'name' => 'Sprint template',
+    'team' => 'team_gid',
+    'public' => true,
+]);
+```
+
+#### ProjectTemplateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_template"` |
+| `name` | `?string` | Template name |
+| `description` | `?string` | Description |
+| `html_description` | `?string` | Description with HTML formatting |
+| `public` | `?bool` | Whether the template is public to the team |
+| `owner` | `?CompactResource` | Owner |
+| `team` | `?CompactResource` | Team |
+| `requested_dates` | `?array` | Dates the template asks for on instantiation |
+| `requested_roles` | `?array` | Roles the template asks for on instantiation |
+| `color` | `?string` | Color |
 
 ---
 

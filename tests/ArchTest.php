@@ -116,6 +116,24 @@ arch('DeleteTaskTemplateRequest sends DELETE')
     ->expect('WMBH\Asana\Requests\TaskTemplates\DeleteTaskTemplateRequest')
     ->toSendDeleteRequest();
 
+arch('GetProjectTemplateRequest sends GET')
+    ->expect('WMBH\Asana\Requests\ProjectTemplates\GetProjectTemplateRequest')
+    ->toSendGetRequest();
+
+arch('InstantiateProjectRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\ProjectTemplates\InstantiateProjectRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('SaveProjectAsTemplateRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('DeleteProjectTemplateRequest sends DELETE')
+    ->expect('WMBH\Asana\Requests\ProjectTemplates\DeleteProjectTemplateRequest')
+    ->toSendDeleteRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

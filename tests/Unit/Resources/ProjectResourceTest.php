@@ -2,9 +2,12 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
+use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
 use WMBH\Asana\Resources\ProjectResource;
 
 function createProjectResource(MockClient $mockClient): ProjectResource
@@ -146,4 +149,26 @@ test('getForTeam returns PaginatedResponse', function () {
     expect($result)->toBeInstanceOf(PaginatedResponse::class)
         ->and($result->data)->toHaveCount(1)
         ->and($result->data[0]->name)->toBe('Team Project');
+});
+
+test('saveAsTemplate returns JobData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => 'job1',
+            'resource_type' => 'job',
+            'resource_subtype' => 'save_as_template',
+            'status' => 'not_started',
+            'new_project_template' => ['gid' => 'pt1', 'name' => 'Sprint', 'resource_type' => 'project_template'],
+        ]], 201),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->saveAsTemplate('p1', ['name' => 'Sprint', 'team' => 'team1', 'public' => true]);
+
+    expect($result)->toBeInstanceOf(JobData::class)
+        ->and($result->new_project_template->gid)->toBe('pt1');
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof SaveProjectAsTemplateRequest
+        && $request->resolveEndpoint() === '/projects/p1/saveAsTemplate'
+        && $request->body()->all() === ['data' => ['name' => 'Sprint', 'team' => 'team1', 'public' => true]]);
 });

@@ -10,6 +10,7 @@ use WMBH\Asana\Resources\CustomFieldResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectResource;
+use WMBH\Asana\Resources\ProjectTemplateResource;
 use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
@@ -38,6 +39,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->goals())->toBeInstanceOf(GoalResource::class)
         ->and($asana->webhooks())->toBeInstanceOf(WebhookResource::class)
         ->and($asana->taskTemplates())->toBeInstanceOf(TaskTemplateResource::class)
+        ->and($asana->projectTemplates())->toBeInstanceOf(ProjectTemplateResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 

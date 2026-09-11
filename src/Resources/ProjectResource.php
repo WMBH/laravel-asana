@@ -3,6 +3,7 @@
 namespace WMBH\Asana\Resources;
 
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Requests\Projects\CreateProjectRequest;
@@ -12,6 +13,7 @@ use WMBH\Asana\Requests\Projects\GetProjectRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsForTeamRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsRequest;
 use WMBH\Asana\Requests\Projects\GetTaskCountsRequest;
+use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
 use WMBH\Asana\Requests\Projects\UpdateProjectRequest;
 
 class ProjectResource
@@ -74,5 +76,12 @@ class ProjectResource
         $response = $this->connector->send(new GetTaskCountsRequest($gid));
 
         return $response->json('data');
+    }
+
+    public function saveAsTemplate(string $gid, array $data, array $optFields = []): JobData
+    {
+        $response = $this->connector->send(new SaveProjectAsTemplateRequest($gid, $data, $optFields));
+
+        return JobData::from($response->json('data'));
     }
 }

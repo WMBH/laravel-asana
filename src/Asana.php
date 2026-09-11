@@ -8,6 +8,7 @@ use WMBH\Asana\Resources\CustomFieldResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectResource;
+use WMBH\Asana\Resources\ProjectTemplateResource;
 use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
@@ -47,6 +48,8 @@ class Asana
     private ?WebhookResource $webhookResource = null;
 
     private ?TaskTemplateResource $taskTemplateResource = null;
+
+    private ?ProjectTemplateResource $projectTemplateResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -122,6 +125,11 @@ class Asana
     public function taskTemplates(): TaskTemplateResource
     {
         return $this->taskTemplateResource ??= new TaskTemplateResource($this->connector);
+    }
+
+    public function projectTemplates(): ProjectTemplateResource
+    {
+        return $this->projectTemplateResource ??= new ProjectTemplateResource($this->connector);
     }
 
     public function batch(): BatchResource
