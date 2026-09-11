@@ -12,6 +12,7 @@ use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
 use WMBH\Asana\Resources\TaskResource;
+use WMBH\Asana\Resources\TaskTemplateResource;
 use WMBH\Asana\Resources\TeamResource;
 use WMBH\Asana\Resources\UserResource;
 use WMBH\Asana\Resources\WebhookResource;
@@ -44,6 +45,8 @@ class Asana
     private ?GoalResource $goalResource = null;
 
     private ?WebhookResource $webhookResource = null;
+
+    private ?TaskTemplateResource $taskTemplateResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -114,6 +117,11 @@ class Asana
     public function webhooks(): WebhookResource
     {
         return $this->webhookResource ??= new WebhookResource($this->connector);
+    }
+
+    public function taskTemplates(): TaskTemplateResource
+    {
+        return $this->taskTemplateResource ??= new TaskTemplateResource($this->connector);
     }
 
     public function batch(): BatchResource

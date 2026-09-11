@@ -103,6 +103,19 @@ arch('GetAttachmentsForObjectRequest sends GET')
     ->expect('WMBH\Asana\Requests\Attachments\GetAttachmentsForObjectRequest')
     ->toSendGetRequest();
 
+arch('GetTaskTemplateRequest sends GET')
+    ->expect('WMBH\Asana\Requests\TaskTemplates\GetTaskTemplateRequest')
+    ->toSendGetRequest();
+
+arch('InstantiateTaskRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\TaskTemplates\InstantiateTaskRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('DeleteTaskTemplateRequest sends DELETE')
+    ->expect('WMBH\Asana\Requests\TaskTemplates\DeleteTaskTemplateRequest')
+    ->toSendDeleteRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

@@ -62,6 +62,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 
 - [Tasks](#tasks)
 - [Task Search (Query Builder)](#task-search-query-builder)
+- [Task Templates](#task-templates)
 - [Projects](#projects)
 - [Sections](#sections)
 - [Users](#users)
@@ -226,6 +227,47 @@ $results = Asana::tasks()->search('workspace_gid', [
 ]);
 // Returns PaginatedResponse directly
 ```
+
+---
+
+### Task Templates
+
+Access via `Asana::taskTemplates()` — returns `TaskTemplateResource`. Instantiating a template is asynchronous: Asana returns a job; poll it with [`Asana::jobs()->get()`](#jobs) until `status` is `succeeded`, then read `new_task`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `string $projectGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List task templates in a project |
+| `get` | `string $gid`, `array $optFields = []` | `TaskTemplateData` | Get a task template |
+| `delete` | `string $gid` | `bool` | Delete a task template |
+| `instantiate` | `string $gid`, `?string $name = null`, `array $optFields = []` | `JobData` | Create a task from the template (async) |
+
+```php
+// List templates in a project
+$templates = Asana::taskTemplates()->list('project_gid');
+
+// Instantiate a template, optionally overriding the task name
+$job = Asana::taskTemplates()->instantiate('template_gid', 'Bug: login broken');
+
+// Poll the job until it finishes
+do {
+    sleep(1);
+    $job = Asana::jobs()->get($job->gid);
+} while (in_array($job->status, ['not_started', 'in_progress'], true));
+
+$taskGid = $job->new_task?->gid;
+```
+
+#### TaskTemplateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"task_template"` |
+| `name` | `?string` | Template name |
+| `project` | `?CompactResource` | Project the template belongs to |
+| `template` | `?array` | The task fields the template applies (name, notes, assignee, …) |
+| `created_by` | `?CompactResource` | User who created the template |
+| `created_at` | `?string` | Creation timestamp |
 
 ---
 

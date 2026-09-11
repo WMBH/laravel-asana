@@ -14,6 +14,7 @@ use WMBH\Asana\Resources\SectionResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
 use WMBH\Asana\Resources\TaskResource;
+use WMBH\Asana\Resources\TaskTemplateResource;
 use WMBH\Asana\Resources\TeamResource;
 use WMBH\Asana\Resources\UserResource;
 use WMBH\Asana\Resources\WebhookResource;
@@ -36,6 +37,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->portfolios())->toBeInstanceOf(PortfolioResource::class)
         ->and($asana->goals())->toBeInstanceOf(GoalResource::class)
         ->and($asana->webhooks())->toBeInstanceOf(WebhookResource::class)
+        ->and($asana->taskTemplates())->toBeInstanceOf(TaskTemplateResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 
