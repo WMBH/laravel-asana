@@ -80,6 +80,8 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Project Briefs](#project-briefs)
 - [Events](#events)
 - [Custom Types](#custom-types)
+- [User Task Lists](#user-task-lists)
+- [Access Requests](#access-requests)
 - [Jobs](#jobs)
 - [Batch Requests](#batch-requests)
 - [Error Handling](#error-handling)
@@ -1202,6 +1204,63 @@ foreach ($types->data as $type) {
 | `name` | `?string` | Type name |
 | `asana_created_type_identifier` | `?string` | Set for Asana-provided types (e.g. `"bug"`), `null` for user-created |
 | `status_options` | `?array` | Status options (`gid`, `name`, `enabled`, `color`, `completion_state`) |
+
+---
+
+### User Task Lists
+
+Access via `Asana::userTaskLists()` — returns `UserTaskListResource`. A user task list is a user's "My Tasks" in a workspace; list its tasks with `Asana::tasks()->getForUserTaskList()`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `UserTaskListData` | Get a user task list |
+| `getForUser` | `string $userGid`, `string $workspaceGid`, `array $optFields = []` | `UserTaskListData` | Get a user's task list in a workspace (`'me'` works) |
+
+```php
+$myTasks = Asana::userTaskLists()->getForUser('me', 'workspace_gid');
+$tasks = Asana::tasks()->getForUserTaskList($myTasks->gid, completedSince: 'now');
+```
+
+#### UserTaskListData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"user_task_list"` |
+| `name` | `?string` | List name |
+| `owner` | `?CompactResource` | Owning user |
+| `workspace` | `?CompactResource` | Workspace |
+
+---
+
+### Access Requests
+
+Access via `Asana::accessRequests()` — returns `AccessRequestResource`. Requests to join private projects and portfolios.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `string $targetGid`, `?string $userGid = null`, `array $optFields = []` | `PaginatedResponse` | Pending requests on a project/portfolio |
+| `create` | `string $targetGid`, `?string $message = null` | `AccessRequestData` | Request access to a private object |
+| `approve` | `string $gid` | `bool` | Approve a request |
+| `reject` | `string $gid` | `bool` | Reject a request |
+
+```php
+$pending = Asana::accessRequests()->list('project_gid');
+foreach ($pending->data as $request) {
+    Asana::accessRequests()->approve($request->gid);
+}
+```
+
+#### AccessRequestData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"access_request"` |
+| `message` | `?string` | Message from the requester |
+| `approval_status` | `?string` | `"pending"`, `"approved"` or `"rejected"` |
+| `requester` | `?CompactResource` | Requesting user |
+| `target` | `?CompactResource` | Project or portfolio requested |
 
 ---
 

@@ -212,6 +212,31 @@ arch('GetCustomTypeRequest sends GET')
     ->expect('WMBH\Asana\Requests\CustomTypes\GetCustomTypeRequest')
     ->toSendGetRequest();
 
+arch('GetUserTaskListRequest sends GET')
+    ->expect('WMBH\Asana\Requests\UserTaskLists\GetUserTaskListRequest')
+    ->toSendGetRequest();
+
+arch('GetUserTaskListForUserRequest sends GET')
+    ->expect('WMBH\Asana\Requests\UserTaskLists\GetUserTaskListForUserRequest')
+    ->toSendGetRequest();
+
+arch('GetAccessRequestsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\AccessRequests\GetAccessRequestsRequest')
+    ->toSendGetRequest();
+
+arch('CreateAccessRequestRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\AccessRequests\CreateAccessRequestRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('ApproveAccessRequestRequest sends POST')
+    ->expect('WMBH\Asana\Requests\AccessRequests\ApproveAccessRequestRequest')
+    ->toSendPostRequest();
+
+arch('RejectAccessRequestRequest sends POST')
+    ->expect('WMBH\Asana\Requests\AccessRequests\RejectAccessRequestRequest')
+    ->toSendPostRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

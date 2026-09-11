@@ -2,6 +2,7 @@
 
 namespace WMBH\Asana;
 
+use WMBH\Asana\Resources\AccessRequestResource;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
@@ -21,6 +22,7 @@ use WMBH\Asana\Resources\TaskResource;
 use WMBH\Asana\Resources\TaskTemplateResource;
 use WMBH\Asana\Resources\TeamResource;
 use WMBH\Asana\Resources\UserResource;
+use WMBH\Asana\Resources\UserTaskListResource;
 use WMBH\Asana\Resources\WebhookResource;
 use WMBH\Asana\Resources\WorkspaceResource;
 
@@ -65,6 +67,10 @@ class Asana
     private ?EventResource $eventResource = null;
 
     private ?CustomTypeResource $customTypeResource = null;
+
+    private ?UserTaskListResource $userTaskListResource = null;
+
+    private ?AccessRequestResource $accessRequestResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -170,6 +176,16 @@ class Asana
     public function customTypes(): CustomTypeResource
     {
         return $this->customTypeResource ??= new CustomTypeResource($this->connector);
+    }
+
+    public function userTaskLists(): UserTaskListResource
+    {
+        return $this->userTaskListResource ??= new UserTaskListResource($this->connector);
+    }
+
+    public function accessRequests(): AccessRequestResource
+    {
+        return $this->accessRequestResource ??= new AccessRequestResource($this->connector);
     }
 
     public function batch(): BatchResource

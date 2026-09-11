@@ -4,6 +4,7 @@ use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
 use WMBH\Asana\Asana;
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Resources\AccessRequestResource;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
@@ -23,6 +24,7 @@ use WMBH\Asana\Resources\TaskResource;
 use WMBH\Asana\Resources\TaskTemplateResource;
 use WMBH\Asana\Resources\TeamResource;
 use WMBH\Asana\Resources\UserResource;
+use WMBH\Asana\Resources\UserTaskListResource;
 use WMBH\Asana\Resources\WebhookResource;
 use WMBH\Asana\Resources\WorkspaceResource;
 
@@ -50,6 +52,8 @@ test('Asana class returns resource instances', function () {
         ->and($asana->projectBriefs())->toBeInstanceOf(ProjectBriefResource::class)
         ->and($asana->events())->toBeInstanceOf(EventResource::class)
         ->and($asana->customTypes())->toBeInstanceOf(CustomTypeResource::class)
+        ->and($asana->userTaskLists())->toBeInstanceOf(UserTaskListResource::class)
+        ->and($asana->accessRequests())->toBeInstanceOf(AccessRequestResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 
