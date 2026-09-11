@@ -25,10 +25,6 @@ Config contents:
 return [
     'token' => env('ASANA_TOKEN'),
     'timeout' => env('ASANA_TIMEOUT', 30),
-    'retry' => [
-        'attempts' => env('ASANA_RETRY_ATTEMPTS', 3),
-        'sleep' => env('ASANA_RETRY_SLEEP', 1000),
-    ],
 ];
 ```
 
@@ -66,19 +62,30 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 
 - [Tasks](#tasks)
 - [Task Search (Query Builder)](#task-search-query-builder)
+- [Task Templates](#task-templates)
 - [Projects](#projects)
+- [Project Templates](#project-templates)
+- [Project Briefs](#project-briefs)
 - [Sections](#sections)
+- [Status Updates](#status-updates)
 - [Users](#users)
+- [User Task Lists](#user-task-lists)
 - [Workspaces](#workspaces)
 - [Teams](#teams)
+- [Memberships](#memberships)
+- [Access Requests](#access-requests)
 - [Tags](#tags)
 - [Stories (Comments)](#stories-comments)
+- [Reactions](#reactions)
 - [Attachments](#attachments)
 - [Custom Fields](#custom-fields)
+- [Custom Types](#custom-types)
 - [Portfolios](#portfolios)
 - [Goals](#goals)
 - [Webhooks](#webhooks)
+- [Events](#events)
 - [Batch Requests](#batch-requests)
+- [Jobs](#jobs)
 - [Error Handling](#error-handling)
 - [Pagination](#pagination)
 
@@ -108,6 +115,15 @@ Access via `Asana::tasks()` — returns `TaskResource`.
 | `getDependents` | `string $taskGid` | `PaginatedResponse` | Get task dependents |
 | `addDependencies` | `string $taskGid`, `array $dependencyGids` | `void` | Add dependencies to a task |
 | `addDependents` | `string $taskGid`, `array $dependentGids` | `void` | Add dependents to a task |
+| `list` | `array $params = []`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tasks by `assignee`, `project`, `section`, `workspace`, `completed_since`, `modified_since`, `custom_type` |
+| `duplicate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Duplicate a task (async, see [Jobs](#jobs)) |
+| `getForTag` | `string $tagGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tasks with a tag |
+| `getForUserTaskList` | `string $userTaskListGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?string $completedSince = null` | `PaginatedResponse` | List tasks in a user's My Tasks list |
+| `createSubtask` | `string $taskGid`, `array $data`, `array $optFields = []` | `TaskData` | Create a subtask under a task |
+| `removeDependencies` | `string $taskGid`, `array $dependencyGids` | `void` | Remove dependencies from a task |
+| `removeDependents` | `string $taskGid`, `array $dependentGids` | `void` | Remove dependents from a task |
+| `removeFollowers` | `string $taskGid`, `array $followers` | `void` | Remove followers from a task |
+| `getByCustomId` | `string $workspaceGid`, `string $customId` | `TaskData` | Get a task by its custom ID (e.g. `ENG-42`) |
 
 ```php
 use WMBH\Asana\Facades\Asana;
@@ -150,6 +166,19 @@ Asana::tasks()->setParent('task_gid', 'parent_task_gid');
 Asana::tasks()->addDependencies('task_gid', ['blocker_task_1', 'blocker_task_2']);
 Asana::tasks()->addDependents('task_gid', ['blocked_task_1']);
 $deps = Asana::tasks()->getDependencies('task_gid');
+
+// List tasks across a workspace for the current user
+$page = Asana::tasks()->list(['assignee' => 'me', 'workspace' => 'workspace_gid', 'completed_since' => 'now']);
+
+// Subtasks, duplication and custom IDs
+$subtask = Asana::tasks()->createSubtask('task_gid', ['name' => 'Write tests']);
+$job = Asana::tasks()->duplicate('task_gid', ['name' => 'Copy of task', 'include' => 'notes,assignee,subtasks']);
+$task = Asana::tasks()->getByCustomId('workspace_gid', 'ENG-42');
+
+// Removing relationships
+Asana::tasks()->removeFollowers('task_gid', ['user_gid_1']);
+Asana::tasks()->removeDependencies('task_gid', ['blocker_task_1']);
+Asana::tasks()->removeDependents('task_gid', ['blocked_task_1']);
 ```
 
 #### TaskData Properties
@@ -233,6 +262,47 @@ $results = Asana::tasks()->search('workspace_gid', [
 
 ---
 
+### Task Templates
+
+Access via `Asana::taskTemplates()` — returns `TaskTemplateResource`. Instantiating a template is asynchronous: Asana returns a job; poll it with [`Asana::jobs()->get()`](#jobs) until `status` is `succeeded`, then read `new_task`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `string $projectGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List task templates in a project |
+| `get` | `string $gid`, `array $optFields = []` | `TaskTemplateData` | Get a task template |
+| `delete` | `string $gid` | `bool` | Delete a task template |
+| `instantiate` | `string $gid`, `?string $name = null`, `array $optFields = []` | `JobData` | Create a task from the template (async) |
+
+```php
+// List templates in a project
+$templates = Asana::taskTemplates()->list('project_gid');
+
+// Instantiate a template, optionally overriding the task name
+$job = Asana::taskTemplates()->instantiate('template_gid', 'Bug: login broken');
+
+// Poll the job until it finishes
+do {
+    sleep(1);
+    $job = Asana::jobs()->get($job->gid);
+} while (in_array($job->status, ['not_started', 'in_progress'], true));
+
+$taskGid = $job->new_task?->gid;
+```
+
+#### TaskTemplateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"task_template"` |
+| `name` | `?string` | Template name |
+| `project` | `?CompactResource` | Project the template belongs to |
+| `template` | `?array` | The task fields the template applies (name, notes, assignee, …) |
+| `created_by` | `?CompactResource` | User who created the template |
+| `created_at` | `?string` | Creation timestamp |
+
+---
+
 ### Projects
 
 Access via `Asana::projects()` — returns `ProjectResource`.
@@ -247,6 +317,20 @@ Access via `Asana::projects()` — returns `ProjectResource`.
 | `delete` | `string $gid` | `bool` | Delete a project |
 | `duplicate` | `string $gid`, `array $data` | `array` | Duplicate a project (returns job) |
 | `getTaskCounts` | `string $gid` | `array` | Get task count breakdown |
+| `addCustomFieldSetting` | `string $gid`, `array $data`, `array $optFields = []` | `CustomFieldSettingData` | Add a custom field to a project (`custom_field`, `is_important`, `insert_before` / `insert_after`) |
+| `removeCustomFieldSetting` | `string $gid`, `string $customFieldGid` | `void` | Remove a custom field from a project |
+| `getForTask` | `string $taskGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?bool $includeInheritedProjects = null` | `PaginatedResponse` | List projects a task belongs to |
+| `getForWorkspace` | `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?bool $archived = null` | `PaginatedResponse` | List projects in a workspace (`/workspaces/{gid}/projects` route, supports `archived` filter) |
+| `createForTeam` | `string $teamGid`, `array $data`, `array $optFields = []` | `ProjectData` | Create a project in a team |
+| `createForWorkspace` | `string $workspaceGid`, `array $data`, `array $optFields = []` | `ProjectData` | Create a project in a workspace |
+| `search` | `string $workspaceGid`, `array $params = []`, `array $optFields = []` | `PaginatedResponse` | Search projects in a workspace (Asana advanced search params) |
+| `addMembers` | `string $gid`, `array $memberGids`, `array $optFields = []` | `ProjectData` | Add members to a project |
+| `removeMembers` | `string $gid`, `array $memberGids`, `array $optFields = []` | `ProjectData` | Remove members from a project |
+| `addFollowers` | `string $gid`, `array $followerGids`, `array $optFields = []` | `ProjectData` | Add followers to a project |
+| `removeFollowers` | `string $gid`, `array $followerGids`, `array $optFields = []` | `ProjectData` | Remove followers from a project |
+| `getMemberships` | `string $gid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project memberships (items are `ProjectMembershipData`) |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `ProjectMembershipData` | Get a single project membership |
+| `saveAsTemplate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Save the project as a project template (async) |
 
 ```php
 // List projects in a workspace
@@ -285,6 +369,45 @@ $counts = Asana::projects()->getTaskCounts('project_gid');
 
 // List projects for a team
 $projects = Asana::projects()->getForTeam('team_gid');
+
+// Projects a task belongs to (including inherited from parent tasks)
+$projects = Asana::projects()->getForTask('task_gid', includeInheritedProjects: true);
+
+// Active projects in a workspace
+$projects = Asana::projects()->getForWorkspace('workspace_gid', archived: false);
+
+// Create directly in a team / workspace
+$project = Asana::projects()->createForTeam('team_gid', ['name' => 'Team Project']);
+$project = Asana::projects()->createForWorkspace('workspace_gid', ['name' => 'Workspace Project']);
+
+// Members and followers (returns the updated project)
+$project = Asana::projects()->addMembers('project_gid', ['user_gid_1', 'user_gid_2']);
+$project = Asana::projects()->removeMembers('project_gid', ['user_gid_1']);
+$project = Asana::projects()->addFollowers('project_gid', ['user_gid_1']);
+$project = Asana::projects()->removeFollowers('project_gid', ['user_gid_1']);
+// List who has access to a project
+$memberships = Asana::projects()->getMemberships('project_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->member->name}: {$membership->access_level}";
+}
+```
+
+#### Project search
+
+`search()` mirrors Asana's advanced project search. Pass the raw Asana params (`text`, `sort_by`, `sort_ascending`, `completed`, `teams.any`, `owner.any`, `members.any`, `members.not`, `portfolios.any`, `due_on.before`, `created_on.after`, …) — booleans are preserved. The response has no pagination cursor.
+
+```php
+$results = Asana::projects()->search('workspace_gid', [
+    'text' => 'sprint',
+    'completed' => false,
+    'teams.any' => 'team_gid',
+    'sort_by' => 'name',
+    'sort_ascending' => true,
+], ['name', 'owner', 'due_on']);
+
+foreach ($results->data as $project) {
+    echo $project->name;
+}
 ```
 
 #### ProjectData Properties
@@ -314,6 +437,71 @@ $projects = Asana::projects()->getForTeam('team_gid');
 | `custom_fields` | `?array` | Custom field values |
 | `members` | `?array` | Project members |
 | `followers` | `?array` | Project followers |
+
+
+#### ProjectMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_membership"` |
+| `resource_subtype` | `?string` | Membership subtype |
+| `parent` | `?CompactResource` | The project |
+| `member` | `?CompactResource` | The user or team |
+| `access_level` | `?string` | `"admin"`, `"editor"`, `"commenter"`, or `"viewer"` |
+| `user` | `?CompactResource` | The user (when member is a user) |
+| `project` | `?CompactResource` | The project |
+| `write_access` | `?string` | `"full_write"` or `"comment_only"` |
+
+---
+
+### Project Templates
+
+Access via `Asana::projectTemplates()` — returns `ProjectTemplateResource`. Instantiating a template is asynchronous: poll the returned job with [`Asana::jobs()->get()`](#jobs) and read `new_project` once `status` is `succeeded`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $workspaceGid = null`, `?string $teamGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project templates (filter by workspace or team) |
+| `getForTeam` | `string $teamGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project templates in a team |
+| `get` | `string $gid`, `array $optFields = []` | `ProjectTemplateData` | Get a project template |
+| `delete` | `string $gid` | `bool` | Delete a project template |
+| `instantiate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Create a project from the template (async) |
+
+```php
+// List templates in a workspace
+$templates = Asana::projectTemplates()->list('workspace_gid');
+
+// Create a project from a template
+$job = Asana::projectTemplates()->instantiate('template_gid', [
+    'name' => 'Sprint 42',
+    'team' => 'team_gid',
+    'public' => false,
+    'requested_dates' => [['gid' => 'requested_date_gid', 'value' => '2026-10-01']],
+]);
+
+// Save an existing project as a template
+$job = Asana::projects()->saveAsTemplate('project_gid', [
+    'name' => 'Sprint template',
+    'team' => 'team_gid',
+    'public' => true,
+]);
+```
+
+#### ProjectTemplateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_template"` |
+| `name` | `?string` | Template name |
+| `description` | `?string` | Description |
+| `html_description` | `?string` | Description with HTML formatting |
+| `public` | `?bool` | Whether the template is public to the team |
+| `owner` | `?CompactResource` | Owner |
+| `team` | `?CompactResource` | Team |
+| `requested_dates` | `?array` | Dates the template asks for on instantiation |
+| `requested_roles` | `?array` | Roles the template asks for on instantiation |
+| `color` | `?string` | Color |
 
 ---
 
@@ -379,6 +567,12 @@ Access via `Asana::users()` — returns `UserResource`.
 | `getForWorkspace` | `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List users in a workspace |
 | `getForTeam` | `string $teamGid`, `array $optFields = []` | `PaginatedResponse` | List users in a team |
 | `me` | `array $optFields = []` | `UserData` | Get the authenticated user |
+| `update` | `string $gid`, `array $data`, `?string $workspaceGid = null`, `array $optFields = []` | `UserData` | Update a user (`name`, `custom_fields`); pass `$workspaceGid` when setting workspace-scoped custom fields |
+| `getFavorites` | `string $userGid`, `string $resourceType`, `string $workspaceGid`, `?string $offset = null`, `?int $limit = null`, `array $optFields = []` | `PaginatedResponse` | The user's sidebar favorites of one type (`project`, `portfolio`, `tag`, `task`, `user`, `project_template`); current user only (items are `CompactResource`) |
+| `getInWorkspace` | `string $workspaceGid`, `string $userGid`, `array $optFields = []` | `UserData` | Get a user as seen in one workspace |
+| `updateInWorkspace` | `string $workspaceGid`, `string $userGid`, `array $data`, `array $optFields = []` | `UserData` | Update a user within one workspace |
+| `getTeamMemberships` | `string $userGid`, `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | The user's team memberships in a workspace (items are `TeamMembershipData`) |
+| `getWorkspaceMemberships` | `string $userGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | The user's workspace memberships (items are `WorkspaceMembershipData`) |
 
 ```php
 // Get the authenticated user
@@ -394,6 +588,17 @@ $users = Asana::users()->getForWorkspace('workspace_gid');
 
 // List users in a team
 $users = Asana::users()->getForTeam('team_gid');
+// Rename the current user
+Asana::users()->update('me', ['name' => 'Jane Doe']);
+
+// Favourite projects in a workspace
+$favorites = Asana::users()->getFavorites('me', 'project', 'workspace_gid');
+
+// Which teams is a user on, and where are they admin?
+$memberships = Asana::users()->getTeamMemberships('user_gid', 'workspace_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->team->name} admin=" . var_export($membership->is_admin, true);
+}
 ```
 
 #### UserData Properties
@@ -420,6 +625,9 @@ Access via `Asana::workspaces()` — returns `WorkspaceResource`.
 | `update` | `string $gid`, `array $data` | `WorkspaceData` | Update a workspace |
 | `addUser` | `string $workspaceGid`, `string $userGid` | `void` | Add a user to a workspace |
 | `removeUser` | `string $workspaceGid`, `string $userGid` | `void` | Remove a user from a workspace |
+| `getMemberships` | `string $workspaceGid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List workspace memberships (items are `WorkspaceMembershipData`) |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `WorkspaceMembershipData` | Get a single workspace membership |
+| `typeahead` | `string $workspaceGid`, `string $resourceType`, `?string $query = null`, `?int $count = null`, `array $optFields = []` | `PaginatedResponse` | Search-as-you-type across `user`, `project`, `task`, `tag`, `team`, `portfolio`, `goal`, `custom_field` (items are `CompactResource`) |
 
 ```php
 // List all workspaces
@@ -436,6 +644,17 @@ Asana::workspaces()->update('workspace_gid', ['name' => 'New Name']);
 // Manage members
 Asana::workspaces()->addUser('workspace_gid', 'user_gid');
 Asana::workspaces()->removeUser('workspace_gid', 'user_gid');
+// Who is in the workspace, and are they guests?
+$memberships = Asana::workspaces()->getMemberships('workspace_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->user->name} guest=" . var_export($membership->is_guest, true);
+}
+
+// Typeahead: find projects whose name matches "Marketing"
+$matches = Asana::workspaces()->typeahead('workspace_gid', 'project', 'Marketing', 5);
+foreach ($matches->data as $match) {
+    echo "{$match->gid}: {$match->name}";
+}
 ```
 
 #### WorkspaceData Properties
@@ -447,6 +666,23 @@ Asana::workspaces()->removeUser('workspace_gid', 'user_gid');
 | `name` | `?string` | Workspace name |
 | `is_organization` | `?bool` | Whether it's an organization |
 | `email_domains` | `?array` | Email domains for the workspace |
+
+
+#### WorkspaceMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"workspace_membership"` |
+| `user` | `?CompactResource` | The user |
+| `workspace` | `?CompactResource` | The workspace |
+| `user_task_list` | `?CompactResource` | The user's "My Tasks" list in this workspace |
+| `is_active` | `?bool` | Whether the membership is active |
+| `is_admin` | `?bool` | Whether the user is a workspace admin |
+| `is_guest` | `?bool` | Whether the user is a guest |
+| `is_view_only` | `?bool` | Whether the user has view-only access |
+| `vacation_dates` | `?array` | `['start_on' => ..., 'end_on' => ...]` when out of office |
+| `created_at` | `?string` | Creation timestamp |
 
 ---
 
@@ -462,6 +698,10 @@ Access via `Asana::teams()` — returns `TeamResource`.
 | `create` | `array $data` | `TeamData` | Create a team |
 | `addUser` | `string $teamGid`, `string $userGid` | `void` | Add a user to a team |
 | `removeUser` | `string $teamGid`, `string $userGid` | `void` | Remove a user from a team |
+| `update` | `string $gid`, `array $data`, `array $optFields = []` | `TeamData` | Update a team |
+| `getMemberships` | `?string $teamGid = null`, `?string $userGid = null`, `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List team memberships filtered by team, user and/or workspace (items are `TeamMembershipData`) |
+| `getMembershipsForTeam` | `string $teamGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List memberships of a team |
+| `getMembership` | `string $membershipGid`, `array $optFields = []` | `TeamMembershipData` | Get a single team membership |
 
 ```php
 // List teams in a workspace
@@ -480,6 +720,14 @@ $team = Asana::teams()->create([
 // Manage members
 Asana::teams()->addUser('team_gid', 'user_gid');
 Asana::teams()->removeUser('team_gid', 'user_gid');
+// Rename a team
+Asana::teams()->update('team_gid', ['name' => 'Platform']);
+
+// Who is on the team, and are they admins?
+$memberships = Asana::teams()->getMembershipsForTeam('team_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->user->name} admin=" . var_export($membership->is_admin, true);
+}
 ```
 
 #### TeamData Properties
@@ -494,6 +742,19 @@ Asana::teams()->removeUser('team_gid', 'user_gid');
 | `organization` | `?CompactResource` | Parent organization |
 | `permalink_url` | `?string` | URL to the team in Asana |
 
+
+#### TeamMembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"team_membership"` |
+| `user` | `?CompactResource` | The user |
+| `team` | `?CompactResource` | The team |
+| `is_guest` | `?bool` | Whether the user is a guest in the team |
+| `is_limited_access` | `?bool` | Whether the user has limited access |
+| `is_admin` | `?bool` | Whether the user is a team admin |
+
 ---
 
 ### Tags
@@ -503,6 +764,7 @@ Access via `Asana::tags()` — returns `TagResource`.
 | Method | Parameters | Returns | Description |
 |--------|-----------|---------|-------------|
 | `get` | `string $gid`, `array $optFields = []` | `TagData` | Get a tag |
+| `list` | `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tags, optionally filtered by workspace |
 | `getForTask` | `string $taskGid`, `array $optFields = []` | `PaginatedResponse` | List tags on a task |
 | `getForWorkspace` | `string $workspaceGid`, `array $optFields = []` | `PaginatedResponse` | List tags in a workspace |
 | `create` | `array $data` | `TagData` | Create a tag |
@@ -511,6 +773,9 @@ Access via `Asana::tags()` — returns `TagResource`.
 | `delete` | `string $gid` | `bool` | Delete a tag |
 
 ```php
+// List tags, paginated
+$page = Asana::tags()->list('workspace_gid', limit: 50);
+
 // List tags in a workspace
 $tags = Asana::tags()->getForWorkspace('workspace_gid');
 
@@ -616,6 +881,7 @@ Access via `Asana::attachments()` — returns `AttachmentResource`.
 |--------|-----------|---------|-------------|
 | `get` | `string $gid`, `array $optFields = []` | `AttachmentData` | Get an attachment |
 | `getForTask` | `string $taskGid`, `array $optFields = []` | `PaginatedResponse` | List attachments on a task |
+| `getForObject` | `string $parentGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List attachments on a task, project or project brief |
 | `create` | `string $parentGid`, `array $data` | `AttachmentData` | Create an attachment |
 | `delete` | `string $gid` | `bool` | Delete an attachment |
 
@@ -669,6 +935,11 @@ Access via `Asana::customFields()` — returns `CustomFieldResource`.
 | `create` | `array $data` | `CustomFieldData` | Create a custom field |
 | `update` | `string $gid`, `array $data` | `CustomFieldData` | Update a custom field |
 | `delete` | `string $gid` | `bool` | Delete a custom field |
+| `getSettingsForProject` | `string $projectGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List custom field settings on a project |
+| `getSettingsForTeam` | `string $teamGid`, `array $optFields = []` | `PaginatedResponse` | List custom field settings on a team |
+| `createEnumOption` | `string $customFieldGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Add an enum option to a custom field |
+| `insertEnumOption` | `string $customFieldGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Move an enum option (`enum_option`, `before_enum_option` / `after_enum_option`) |
+| `updateEnumOption` | `string $enumOptionGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Update an enum option |
 
 ```php
 // List custom fields in a workspace
@@ -704,6 +975,18 @@ Asana::customFields()->update('field_gid', ['name' => 'Effort Points']);
 
 // Delete a custom field
 Asana::customFields()->delete('field_gid');
+
+// Custom field settings on a project / team
+$settings = Asana::customFields()->getSettingsForProject('project_gid');
+$teamSettings = Asana::customFields()->getSettingsForTeam('team_gid');
+
+// Enum options: add, reorder, update
+$option = Asana::customFields()->createEnumOption('field_gid', ['name' => 'Urgent', 'color' => 'red']);
+Asana::customFields()->insertEnumOption('field_gid', [
+    'enum_option' => $option->gid,
+    'before_enum_option' => 'other_option_gid',
+]);
+Asana::customFields()->updateEnumOption($option->gid, ['name' => 'Critical', 'enabled' => false]);
 ```
 
 #### CustomFieldData Properties
@@ -725,6 +1008,28 @@ Asana::customFields()->delete('field_gid');
 | `custom_label_position` | `?string` | `"prefix"` or `"suffix"` |
 | `is_global_to_workspace` | `?bool` | Available across the workspace |
 | `has_notifications_enabled` | `?bool` | Notifications on change |
+
+
+#### CustomFieldSettingData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"custom_field_setting"` |
+| `project` | `?CompactResource` | Project the setting belongs to (deprecated by Asana, prefer `parent`) |
+| `parent` | `?CompactResource` | Project, portfolio, or goal the setting belongs to |
+| `is_important` | `?bool` | Shown prominently in the project |
+| `custom_field` | `?array` | The custom field record |
+
+#### EnumOptionData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"enum_option"` |
+| `name` | `?string` | Option name |
+| `enabled` | `?bool` | Whether the option can be selected |
+| `color` | `?string` | Option color |
 
 ---
 
@@ -802,8 +1107,8 @@ Access via `Asana::goals()` — returns `GoalResource`.
 | `create` | `array $data` | `GoalData` | Create a goal |
 | `update` | `string $gid`, `array $data` | `GoalData` | Update a goal |
 | `delete` | `string $gid` | `bool` | Delete a goal |
-| `getSubgoals` | `string $goalGid` | `PaginatedResponse` | List subgoals |
-| `addSubgoal` | `string $goalGid`, `string $subgoalGid` | `bool` | Add a subgoal |
+| `getSubgoals` | `string $goalGid` | `PaginatedResponse` | List subgoals (items are `CompactResource`) |
+| `addSubgoal` | `string $goalGid`, `string $subgoalGid` | `bool` | Add a subgoal (creates a supporting relationship) |
 | `getRelationships` | `string $goalGid` | `PaginatedResponse` | List supporting work (projects/portfolios) |
 | `updateMetric` | `string $goalGid`, `array $data` | `GoalData` | Update the goal's progress metric |
 
@@ -922,6 +1227,333 @@ Asana::webhooks()->delete('webhook_gid');
 | `last_failure_content` | `?string` | Last failure details |
 | `last_success_at` | `?string` | Last success timestamp |
 | `filters` | `?array` | Event filters |
+
+---
+
+### Status Updates
+
+Access via `Asana::statusUpdates()` — returns `StatusUpdateResource`. Status updates work on projects, portfolios and goals (Asana's replacement for the deprecated project statuses).
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `StatusUpdateData` | Get a status update |
+| `getForObject` | `string $parentGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?string $createdSince = null` | `PaginatedResponse` | List status updates on a project/portfolio/goal |
+| `create` | `string $parentGid`, `array $data`, `array $optFields = []` | `StatusUpdateData` | Post a status update |
+| `delete` | `string $gid` | `bool` | Delete a status update |
+
+```php
+// Post a project status
+$update = Asana::statusUpdates()->create('project_gid', [
+    'text' => 'Shipping on Friday',
+    'status_type' => 'on_track', // on_track, at_risk, off_track, on_hold, complete, achieved, partial, missed, dropped
+]);
+
+// Latest updates since a date
+$updates = Asana::statusUpdates()->getForObject('project_gid', createdSince: '2025-01-01T00:00:00Z');
+```
+
+#### StatusUpdateData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"status_update"` |
+| `resource_subtype` | `?string` | `"project_status_update"`, `"portfolio_status_update"` or `"goal_status_update"` |
+| `title` | `?string` | Title |
+| `text` | `?string` | Plain-text body |
+| `html_text` | `?string` | HTML body |
+| `status_type` | `?string` | `"on_track"`, `"at_risk"`, `"off_track"`, `"on_hold"`, `"complete"`, ... |
+| `author` | `?CompactResource` | Author |
+| `created_at` | `?string` | Creation timestamp |
+| `created_by` | `?CompactResource` | Creator |
+| `modified_at` | `?string` | Last modified timestamp |
+| `hearted` | `?bool` | Whether the current user hearted it |
+| `hearts` | `?array` | Users who hearted it |
+| `liked` | `?bool` | Whether the current user liked it |
+| `likes` | `?array` | Users who liked it |
+| `reaction_summary` | `?array` | Reaction counts |
+| `num_hearts` | `?int` | Number of hearts |
+| `num_likes` | `?int` | Number of likes |
+| `parent` | `?CompactResource` | Project, portfolio or goal the update belongs to |
+
+---
+
+### Project Briefs
+
+Access via `Asana::projectBriefs()` — returns `ProjectBriefResource`. A project has at most one brief.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `ProjectBriefData` | Get a project brief |
+| `create` | `string $projectGid`, `array $data`, `array $optFields = []` | `ProjectBriefData` | Create the brief for a project |
+| `update` | `string $gid`, `array $data`, `array $optFields = []` | `ProjectBriefData` | Update a brief |
+| `delete` | `string $gid` | `bool` | Delete a brief |
+
+```php
+$brief = Asana::projectBriefs()->create('project_gid', [
+    'title' => 'Launch plan',
+    'html_text' => '<body><strong>Goal:</strong> ship in Q3</body>',
+]);
+
+Asana::projectBriefs()->update($brief->gid, ['title' => 'Launch plan v2']);
+```
+
+#### ProjectBriefData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"project_brief"` |
+| `title` | `?string` | Title |
+| `html_text` | `?string` | HTML body |
+| `text` | `?string` | Plain-text body |
+| `permalink_url` | `?string` | URL to the brief in Asana |
+| `project` | `?CompactResource` | Owning project |
+
+---
+
+### Events
+
+Access via `Asana::events()` — returns `EventResource`. Events are a polling feed of changes on a project, task or workspace, driven by a `sync` token.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $resourceGid`, `?string $sync = null`, `array $optFields = []` | `EventsResponse` | Events on a project or task since `$sync` |
+| `getForWorkspace` | `string $workspaceGid`, `?string $sync = null` | `EventsResponse` | Events across a workspace since `$sync` |
+
+The first call has no token. Asana answers it with HTTP 412 and a fresh token; this package turns that into an `EventsResponse` with empty `data` and the token in `sync`, so the loop below just works:
+
+```php
+$page = Asana::events()->get('project_gid');           // first call: data = [], sync = fresh token
+$sync = $page->sync;
+
+do {
+    $page = Asana::events()->get('project_gid', $sync);
+    foreach ($page->data as $event) {
+        echo "{$event->type} {$event->action} on {$event->resource?->gid}\n";
+    }
+    $sync = $page->sync;
+} while ($page->hasMore);
+```
+
+#### EventsResponse Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `array` | Array of `EventData` |
+| `sync` | `?string` | Token to pass to the next call |
+| `hasMore` | `bool` | Whether more events are waiting (Asana caps a page at 100) |
+
+#### EventData Properties
+
+Events have no `gid`; every property is nullable.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `user` | `?CompactResource` | User who triggered the event |
+| `resource` | `?CompactResource` | Resource that changed |
+| `type` | `?string` | Resource type (`"task"`, `"project"`, `"story"`, ...) |
+| `action` | `?string` | `"added"`, `"removed"`, `"changed"`, `"deleted"`, `"undeleted"` |
+| `parent` | `?CompactResource` | Parent of the changed resource |
+| `created_at` | `?string` | Event timestamp |
+| `change` | `?array` | Field-level change (`field`, `action`, `new_value`, `added_value`, `removed_value`) |
+
+---
+
+### Custom Types
+
+Access via `Asana::customTypes()` — returns `CustomTypeResource`. Custom types are read-only through the API; pass exactly one of `projectGid` or `workspaceGid` to `list`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $projectGid = null`, `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List custom types in a project or workspace |
+| `get` | `string $gid`, `array $optFields = []` | `CustomTypeData` | Get a custom type |
+
+```php
+$types = Asana::customTypes()->list(projectGid: 'project_gid', optFields: ['name', 'status_options']);
+foreach ($types->data as $type) {
+    echo "{$type->name}: " . count($type->status_options ?? []) . " statuses\n";
+}
+```
+
+#### CustomTypeData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"custom_type"` |
+| `name` | `?string` | Type name |
+| `asana_created_type_identifier` | `?string` | Set for Asana-provided types (e.g. `"bug"`), `null` for user-created |
+| `status_options` | `?array` | Status options (`gid`, `name`, `enabled`, `color`, `completion_state`) |
+
+---
+
+### User Task Lists
+
+Access via `Asana::userTaskLists()` — returns `UserTaskListResource`. A user task list is a user's "My Tasks" in a workspace; list its tasks with `Asana::tasks()->getForUserTaskList()`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `UserTaskListData` | Get a user task list |
+| `getForUser` | `string $userGid`, `string $workspaceGid`, `array $optFields = []` | `UserTaskListData` | Get a user's task list in a workspace (`'me'` works) |
+
+```php
+$myTasks = Asana::userTaskLists()->getForUser('me', 'workspace_gid');
+$tasks = Asana::tasks()->getForUserTaskList($myTasks->gid, completedSince: 'now');
+```
+
+#### UserTaskListData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"user_task_list"` |
+| `name` | `?string` | List name |
+| `owner` | `?CompactResource` | Owning user |
+| `workspace` | `?CompactResource` | Workspace |
+
+---
+
+### Access Requests
+
+Access via `Asana::accessRequests()` — returns `AccessRequestResource`. Requests to join private projects and portfolios.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `string $targetGid`, `?string $userGid = null`, `array $optFields = []` | `PaginatedResponse` | Pending requests on a project/portfolio |
+| `create` | `string $targetGid`, `?string $message = null` | `AccessRequestData` | Request access to a private object |
+| `approve` | `string $gid` | `bool` | Approve a request |
+| `reject` | `string $gid` | `bool` | Reject a request |
+
+```php
+$pending = Asana::accessRequests()->list('project_gid');
+foreach ($pending->data as $request) {
+    Asana::accessRequests()->approve($request->gid);
+}
+```
+
+#### AccessRequestData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"access_request"` |
+| `message` | `?string` | Message from the requester |
+| `approval_status` | `?string` | `"pending"`, `"approved"` or `"rejected"` |
+| `requester` | `?CompactResource` | Requesting user |
+| `target` | `?CompactResource` | Project or portfolio requested |
+
+---
+
+### Reactions
+
+Access via `Asana::reactions()` — returns `ReactionResource`. Lists who reacted to a task, story or status update with a given emoji. `$emojiBase` is the emoji without skin-tone modifiers; results include every variant.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `getForObject` | `string $targetGid`, `string $emojiBase`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | Reactions with `$emojiBase` on the target |
+
+```php
+$thumbs = Asana::reactions()->getForObject('task_gid', '👍');
+foreach ($thumbs->data as $reaction) {
+    echo "{$reaction->user->gid} reacted {$reaction->emoji}\n";
+}
+```
+
+#### ReactionData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `emoji` | `?string` | The exact emoji used (may include a skin-tone variant) |
+| `user` | `?CompactResource` | User who reacted |
+
+---
+
+### Memberships
+
+Access via `Asana::memberships()` — returns `MembershipResource`. One endpoint for memberships on projects, portfolios, goals, custom fields and custom types.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $parentGid = null`, `?string $memberGid = null`, `?string $resourceSubtype = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List memberships filtered by parent, member and/or subtype |
+| `get` | `string $gid` | `MembershipData` | Get a membership |
+| `create` | `array $data` | `MembershipData` | Create a membership (`parent`, `member`, `access_level`, `role`) |
+| `update` | `string $gid`, `array $data` | `MembershipData` | Update a membership (`access_level`) |
+| `delete` | `string $gid` | `bool` | Delete a membership |
+
+```php
+// List memberships on a project
+$memberships = Asana::memberships()->list('project_gid');
+
+// Add a user to a portfolio as editor
+$membership = Asana::memberships()->create([
+    'parent' => 'portfolio_gid',
+    'member' => 'user_gid',
+    'access_level' => 'editor',
+]);
+
+// Change access level
+Asana::memberships()->update($membership->gid, ['access_level' => 'viewer']);
+
+// Remove
+Asana::memberships()->delete($membership->gid);
+```
+
+#### MembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | e.g. `"project_membership"`, `"goal_membership"` |
+| `resource_subtype` | `?string` | Membership subtype |
+| `parent` | `?CompactResource` | The project / portfolio / goal / custom field / custom type |
+| `member` | `?CompactResource` | The user or team |
+| `access_level` | `?string` | `"admin"`, `"editor"`, `"commenter"`, or `"viewer"` |
+| `role` | `?string` | Goal memberships only: `"editor"` or `"commenter"` |
+| `user` | `?CompactResource` | The user (project / goal memberships) |
+| `goal` | `?CompactResource` | The goal (goal memberships) |
+| `workspace` | `?CompactResource` | The workspace (goal memberships) |
+| `project` | `?CompactResource` | The project (project memberships) |
+| `write_access` | `?string` | Project memberships only |
+
+---
+
+### Jobs
+
+Access via `Asana::jobs()` — returns `JobResource`. Asynchronous operations (`tasks()->duplicate()`, `projects()->duplicate()`, `projects()->saveAsTemplate()`, `taskTemplates()->instantiate()`, `projectTemplates()->instantiate()`) return a `JobData`; poll it here.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `get` | `string $gid`, `array $optFields = []` | `JobData` | Get a job's status and result |
+
+```php
+$job = Asana::tasks()->duplicate('task_gid', ['name' => 'Copy', 'include' => 'notes,assignee']);
+
+do {
+    sleep(1);
+    $job = Asana::jobs()->get($job->gid);
+} while (in_array($job->status, ['not_started', 'in_progress'], true));
+
+if ($job->status === 'succeeded') {
+    $newTaskGid = $job->new_task->gid;
+}
+```
+
+#### JobData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"job"` |
+| `resource_subtype` | `?string` | `"duplicate_task"`, `"duplicate_project"`, `"instantiate_task"`, `"instantiate_project"`, `"save_as_template"`, … |
+| `status` | `?string` | `"not_started"`, `"in_progress"`, `"succeeded"`, or `"failed"` |
+| `new_task` | `?CompactResource` | Resulting task, if any |
+| `new_project` | `?CompactResource` | Resulting project, if any |
+| `new_portfolio` | `?CompactResource` | Resulting portfolio, if any |
+| `new_project_template` | `?CompactResource` | Resulting project template, if any |
+| `new_graph_export` | `?array` | Resulting graph export (`download_url`, `completed_at`), if any |
+| `new_resource_export` | `?array` | Resulting resource export, if any |
 
 ---
 

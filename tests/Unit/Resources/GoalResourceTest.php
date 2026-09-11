@@ -2,8 +2,10 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\GoalData;
+use WMBH\Asana\Data\Shared\CompactResource;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Resources\GoalResource;
 
@@ -95,11 +97,18 @@ test('delete returns true on success', function () {
     expect($resource->delete('1100'))->toBeTrue();
 });
 
-test('getSubgoals returns PaginatedResponse', function () {
+test('getSubgoals maps goal relationships to subgoal CompactResources', function () {
     $mockClient = new MockClient([
         MockResponse::make([
-            'data' => [['gid' => '10', 'name' => 'Subgoal', 'resource_type' => 'goal']],
-            'next_page' => null,
+            'data' => [
+                [
+                    'gid' => '900',
+                    'resource_type' => 'goal_relationship',
+                    'resource_subtype' => 'subgoal',
+                    'supporting_resource' => ['gid' => '10', 'name' => 'Subgoal', 'resource_type' => 'goal'],
+                ],
+            ],
+            'next_page' => ['offset' => 'tok', 'uri' => '/goal_relationships?offset=tok'],
         ], 200),
     ]);
 
@@ -107,17 +116,39 @@ test('getSubgoals returns PaginatedResponse', function () {
     $result = $resource->getSubgoals('1100');
 
     expect($result)->toBeInstanceOf(PaginatedResponse::class)
-        ->and($result->data)->toHaveCount(1);
+        ->and($result->data)->toHaveCount(1)
+        ->and($result->data[0])->toBeInstanceOf(CompactResource::class)
+        ->and($result->data[0]->gid)->toBe('10')
+        ->and($result->data[0]->name)->toBe('Subgoal')
+        ->and($result->nextPageToken)->toBe('tok');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/goal_relationships'
+        && $request->query()->all() === ['supported_goal' => '1100', 'resource_subtype' => 'subgoal']);
 });
 
-test('addSubgoal returns true on success', function () {
+test('getSubgoals returns an empty page when there are no relationships', function () {
     $mockClient = new MockClient([
-        MockResponse::make(['data' => []], 200),
+        MockResponse::make(['data' => [], 'next_page' => null], 200),
+    ]);
+
+    $resource = createGoalResource($mockClient);
+    $result = $resource->getSubgoals('1100');
+
+    expect($result->data)->toBe([])
+        ->and($result->hasNextPage())->toBeFalse();
+});
+
+test('addSubgoal posts a supporting relationship', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => ['gid' => '900', 'resource_type' => 'goal_relationship']], 200),
     ]);
 
     $resource = createGoalResource($mockClient);
 
     expect($resource->addSubgoal('1100', 'sub1'))->toBeTrue();
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/goals/1100/addSupportingRelationship'
+        && $request->body()->all() === ['data' => ['supporting_resource' => 'sub1']]);
 });
 
 test('getRelationships returns PaginatedResponse', function () {

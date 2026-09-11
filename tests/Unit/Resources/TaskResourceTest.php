@@ -2,10 +2,17 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Data\TaskData;
 use WMBH\Asana\Query\TaskQueryBuilder;
+use WMBH\Asana\Requests\Tasks\CreateSubtaskRequest;
+use WMBH\Asana\Requests\Tasks\DuplicateTaskRequest;
+use WMBH\Asana\Requests\Tasks\RemoveDependenciesRequest;
+use WMBH\Asana\Requests\Tasks\RemoveDependentsRequest;
+use WMBH\Asana\Requests\Tasks\RemoveFollowersRequest;
 use WMBH\Asana\Resources\TaskResource;
 
 function createTaskResource(MockClient $mockClient): TaskResource
@@ -197,4 +204,173 @@ test('setParent returns TaskData', function () {
 
     expect($result)->toBeInstanceOf(TaskData::class)
         ->and($result->gid)->toBe('123');
+});
+
+test('list returns PaginatedResponse and forwards params', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'name' => 'Task 1', 'resource_type' => 'task'],
+                ['gid' => '2', 'name' => 'Task 2', 'resource_type' => 'task'],
+            ],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->list(['assignee' => 'me', 'workspace' => 'ws1', 'completed_since' => 'now'], ['name'], 'abc', 20);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(2)
+        ->and($result->data[0])->toBeInstanceOf(TaskData::class)
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/tasks'
+        && $request->query()->all() === [
+            'assignee' => 'me',
+            'workspace' => 'ws1',
+            'completed_since' => 'now',
+            'opt_fields' => 'name',
+            'offset' => 'abc',
+            'limit' => 20,
+        ]);
+});
+
+test('duplicate returns JobData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => 'job1',
+            'resource_type' => 'job',
+            'resource_subtype' => 'duplicate_task',
+            'status' => 'in_progress',
+            'new_task' => ['gid' => 't2', 'name' => 'Copy', 'resource_type' => 'task'],
+        ]], 201),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->duplicate('t1', ['name' => 'Copy', 'include' => 'notes,assignee']);
+
+    expect($result)->toBeInstanceOf(JobData::class)
+        ->and($result->gid)->toBe('job1')
+        ->and($result->new_task->gid)->toBe('t2');
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof DuplicateTaskRequest
+        && $request->resolveEndpoint() === '/tasks/t1/duplicate'
+        && $request->body()->all() === ['data' => ['name' => 'Copy', 'include' => 'notes,assignee']]);
+});
+
+test('getForTag returns PaginatedResponse', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [['gid' => '1', 'name' => 'Tagged', 'resource_type' => 'task']],
+            'next_page' => ['offset' => 'tok', 'uri' => '/tags/tag1/tasks?offset=tok'],
+        ], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->getForTag('tag1');
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data[0])->toBeInstanceOf(TaskData::class)
+        ->and($result->hasNextPage())->toBeTrue()
+        ->and($result->nextPageToken)->toBe('tok');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/tags/tag1/tasks');
+});
+
+test('getForUserTaskList returns PaginatedResponse and forwards completed_since', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [['gid' => '1', 'name' => 'My task', 'resource_type' => 'task']],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->getForUserTaskList('utl1', ['name'], null, 50, 'now');
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(1);
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/user_task_lists/utl1/tasks'
+        && $request->query()->all() === ['opt_fields' => 'name', 'limit' => 50, 'completed_since' => 'now']);
+});
+
+test('createSubtask returns TaskData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => 'sub1',
+            'name' => 'Subtask',
+            'resource_type' => 'task',
+            'parent' => ['gid' => 't1', 'name' => 'Parent', 'resource_type' => 'task'],
+        ]], 201),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->createSubtask('t1', ['name' => 'Subtask']);
+
+    expect($result)->toBeInstanceOf(TaskData::class)
+        ->and($result->gid)->toBe('sub1')
+        ->and($result->parent->gid)->toBe('t1');
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof CreateSubtaskRequest
+        && $request->resolveEndpoint() === '/tasks/t1/subtasks'
+        && $request->body()->all() === ['data' => ['name' => 'Subtask']]);
+});
+
+test('removeDependencies sends dependency gids', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => []], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $resource->removeDependencies('t1', ['d1', 'd2']);
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof RemoveDependenciesRequest
+        && $request->resolveEndpoint() === '/tasks/t1/removeDependencies'
+        && $request->body()->all() === ['data' => ['dependencies' => ['d1', 'd2']]]);
+});
+
+test('removeDependents sends dependent gids', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => []], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $resource->removeDependents('t1', ['d3']);
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof RemoveDependentsRequest
+        && $request->resolveEndpoint() === '/tasks/t1/removeDependents'
+        && $request->body()->all() === ['data' => ['dependents' => ['d3']]]);
+});
+
+test('removeFollowers sends followers', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => ['gid' => 't1', 'resource_type' => 'task']], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $resource->removeFollowers('t1', ['u1', 'u2']);
+
+    $mockClient->assertSent(fn (Request $request) => $request instanceof RemoveFollowersRequest
+        && $request->resolveEndpoint() === '/tasks/t1/removeFollowers'
+        && $request->body()->all() === ['data' => ['followers' => ['u1', 'u2']]]);
+});
+
+test('getByCustomId returns TaskData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => 't9',
+            'name' => 'Custom ID task',
+            'resource_type' => 'task',
+        ]], 200),
+    ]);
+
+    $resource = createTaskResource($mockClient);
+    $result = $resource->getByCustomId('ws1', 'ENG-42');
+
+    expect($result)->toBeInstanceOf(TaskData::class)
+        ->and($result->gid)->toBe('t9');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/workspaces/ws1/tasks/custom_id/ENG-42');
 });

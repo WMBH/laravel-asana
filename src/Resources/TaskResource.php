@@ -3,6 +3,7 @@
 namespace WMBH\Asana\Resources;
 
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Data\TaskData;
 use WMBH\Asana\Query\TaskQueryBuilder;
@@ -11,14 +12,23 @@ use WMBH\Asana\Requests\Tasks\AddDependentsRequest;
 use WMBH\Asana\Requests\Tasks\AddFollowersRequest;
 use WMBH\Asana\Requests\Tasks\AddProjectToTaskRequest;
 use WMBH\Asana\Requests\Tasks\AddTagToTaskRequest;
+use WMBH\Asana\Requests\Tasks\CreateSubtaskRequest;
 use WMBH\Asana\Requests\Tasks\CreateTaskRequest;
 use WMBH\Asana\Requests\Tasks\DeleteTaskRequest;
+use WMBH\Asana\Requests\Tasks\DuplicateTaskRequest;
 use WMBH\Asana\Requests\Tasks\GetDependenciesRequest;
 use WMBH\Asana\Requests\Tasks\GetDependentsRequest;
 use WMBH\Asana\Requests\Tasks\GetSubtasksRequest;
+use WMBH\Asana\Requests\Tasks\GetTaskByCustomIdRequest;
 use WMBH\Asana\Requests\Tasks\GetTaskRequest;
 use WMBH\Asana\Requests\Tasks\GetTasksForProjectRequest;
 use WMBH\Asana\Requests\Tasks\GetTasksForSectionRequest;
+use WMBH\Asana\Requests\Tasks\GetTasksForTagRequest;
+use WMBH\Asana\Requests\Tasks\GetTasksForUserTaskListRequest;
+use WMBH\Asana\Requests\Tasks\GetTasksRequest;
+use WMBH\Asana\Requests\Tasks\RemoveDependenciesRequest;
+use WMBH\Asana\Requests\Tasks\RemoveDependentsRequest;
+use WMBH\Asana\Requests\Tasks\RemoveFollowersRequest;
 use WMBH\Asana\Requests\Tasks\RemoveProjectFromTaskRequest;
 use WMBH\Asana\Requests\Tasks\RemoveTagFromTaskRequest;
 use WMBH\Asana\Requests\Tasks\SearchTasksRequest;
@@ -145,5 +155,62 @@ class TaskResource
     public function addDependents(string $taskGid, array $dependentGids): void
     {
         $this->connector->send(new AddDependentsRequest($taskGid, $dependentGids));
+    }
+
+    public function list(array $params = [], array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetTasksRequest($params, $optFields, $offset, $limit));
+
+        return PaginatedResponse::fromResponse($response->json(), TaskData::class);
+    }
+
+    public function duplicate(string $gid, array $data, array $optFields = []): JobData
+    {
+        $response = $this->connector->send(new DuplicateTaskRequest($gid, $data, $optFields));
+
+        return JobData::from($response->json('data'));
+    }
+
+    public function getForTag(string $tagGid, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetTasksForTagRequest($tagGid, $optFields, $offset, $limit));
+
+        return PaginatedResponse::fromResponse($response->json(), TaskData::class);
+    }
+
+    public function getForUserTaskList(string $userTaskListGid, array $optFields = [], ?string $offset = null, ?int $limit = null, ?string $completedSince = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetTasksForUserTaskListRequest($userTaskListGid, $optFields, $offset, $limit, $completedSince));
+
+        return PaginatedResponse::fromResponse($response->json(), TaskData::class);
+    }
+
+    public function createSubtask(string $taskGid, array $data, array $optFields = []): TaskData
+    {
+        $response = $this->connector->send(new CreateSubtaskRequest($taskGid, $data, $optFields));
+
+        return TaskData::from($response->json('data'));
+    }
+
+    public function removeDependencies(string $taskGid, array $dependencyGids): void
+    {
+        $this->connector->send(new RemoveDependenciesRequest($taskGid, $dependencyGids));
+    }
+
+    public function removeDependents(string $taskGid, array $dependentGids): void
+    {
+        $this->connector->send(new RemoveDependentsRequest($taskGid, $dependentGids));
+    }
+
+    public function removeFollowers(string $taskGid, array $followers): void
+    {
+        $this->connector->send(new RemoveFollowersRequest($taskGid, $followers));
+    }
+
+    public function getByCustomId(string $workspaceGid, string $customId): TaskData
+    {
+        $response = $this->connector->send(new GetTaskByCustomIdRequest($workspaceGid, $customId));
+
+        return TaskData::from($response->json('data'));
     }
 }

@@ -22,8 +22,6 @@ class AsanaServiceProvider extends PackageServiceProvider
             return new AsanaConnector(
                 token: config('asana.token', ''),
                 timeout: config('asana.timeout', 30),
-                retryAttempts: config('asana.retry.attempts', 3),
-                retrySleep: config('asana.retry.sleep', 1000),
             );
         });
 

@@ -2,9 +2,11 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Data\TeamData;
+use WMBH\Asana\Data\TeamMembershipData;
 use WMBH\Asana\Resources\TeamResource;
 
 function createTeamResource(MockClient $mockClient): TeamResource
@@ -51,6 +53,8 @@ test('getForWorkspace returns PaginatedResponse', function () {
     expect($result)->toBeInstanceOf(PaginatedResponse::class)
         ->and($result->data)->toHaveCount(2)
         ->and($result->data[0])->toBeInstanceOf(TeamData::class);
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/workspaces/ws1/teams');
 });
 
 test('getForUser returns PaginatedResponse', function () {
@@ -105,4 +109,107 @@ test('removeUser sends request without error', function () {
     $resource->removeUser('team1', 'user1');
 
     $mockClient->assertSentCount(1);
+});
+
+test('update returns TeamData and sends PUT body with opt_fields', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '50',
+            'name' => 'Platform',
+            'resource_type' => 'team',
+        ]], 200),
+    ]);
+
+    $resource = createTeamResource($mockClient);
+    $result = $resource->update('50', ['name' => 'Platform'], ['name']);
+
+    expect($result)->toBeInstanceOf(TeamData::class)
+        ->and($result->name)->toBe('Platform');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/teams/50'
+        && $request->body()->all() === ['data' => ['name' => 'Platform']]
+        && $request->query()->all() === ['opt_fields' => 'name']);
+});
+
+test('getMemberships returns PaginatedResponse of TeamMembershipData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'resource_type' => 'team_membership', 'is_admin' => true],
+                ['gid' => '2', 'resource_type' => 'team_membership', 'is_admin' => false],
+            ],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createTeamResource($mockClient);
+    $result = $resource->getMemberships('team1', 'user1', 'ws1', ['is_admin'], 'abc', 10);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(2)
+        ->and($result->data[0])->toBeInstanceOf(TeamMembershipData::class)
+        ->and($result->data[0]->is_admin)->toBeTrue()
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/team_memberships'
+        && $request->query()->all() === [
+            'team' => 'team1',
+            'user' => 'user1',
+            'workspace' => 'ws1',
+            'opt_fields' => 'is_admin',
+            'offset' => 'abc',
+            'limit' => 10,
+        ]);
+});
+
+test('getMemberships omits null filters', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [], 'next_page' => null], 200),
+    ]);
+
+    $resource = createTeamResource($mockClient);
+    $resource->getMemberships();
+
+    $mockClient->assertSent(fn (Request $request) => $request->query()->all() === []);
+});
+
+test('getMembershipsForTeam returns PaginatedResponse and handles pagination', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [['gid' => '1', 'resource_type' => 'team_membership']],
+            'next_page' => ['offset' => 'tok', 'uri' => '/teams/team1/team_memberships?offset=tok'],
+        ], 200),
+    ]);
+
+    $resource = createTeamResource($mockClient);
+    $result = $resource->getMembershipsForTeam('team1');
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data[0])->toBeInstanceOf(TeamMembershipData::class)
+        ->and($result->hasNextPage())->toBeTrue()
+        ->and($result->nextPageToken)->toBe('tok');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/teams/team1/team_memberships');
+});
+
+test('getMembership returns TeamMembershipData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '800',
+            'resource_type' => 'team_membership',
+            'is_guest' => true,
+            'user' => ['gid' => '2', 'name' => 'Jane', 'resource_type' => 'user'],
+        ]], 200),
+    ]);
+
+    $resource = createTeamResource($mockClient);
+    $result = $resource->getMembership('800', ['is_guest']);
+
+    expect($result)->toBeInstanceOf(TeamMembershipData::class)
+        ->and($result->gid)->toBe('800')
+        ->and($result->is_guest)->toBeTrue()
+        ->and($result->user->name)->toBe('Jane');
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/team_memberships/800'
+        && $request->query()->all() === ['opt_fields' => 'is_guest']);
 });

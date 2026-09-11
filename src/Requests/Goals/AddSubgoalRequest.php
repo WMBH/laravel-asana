@@ -20,11 +20,11 @@ class AddSubgoalRequest extends Request implements HasBody
 
     public function resolveEndpoint(): string
     {
-        return "/goals/{$this->goalGid}/addSubgoal";
+        return "/goals/{$this->goalGid}/addSupportingRelationship";
     }
 
     protected function defaultBody(): array
     {
-        return ['data' => ['subgoal' => $this->subgoalGid]];
+        return ['data' => ['supporting_resource' => $this->subgoalGid]];
     }
 }

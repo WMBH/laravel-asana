@@ -2,18 +2,29 @@
 
 namespace WMBH\Asana;
 
+use WMBH\Asana\Resources\AccessRequestResource;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
+use WMBH\Asana\Resources\CustomTypeResource;
+use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
+use WMBH\Asana\Resources\JobResource;
+use WMBH\Asana\Resources\MembershipResource;
 use WMBH\Asana\Resources\PortfolioResource;
+use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
+use WMBH\Asana\Resources\ProjectTemplateResource;
+use WMBH\Asana\Resources\ReactionResource;
 use WMBH\Asana\Resources\SectionResource;
+use WMBH\Asana\Resources\StatusUpdateResource;
 use WMBH\Asana\Resources\StoryResource;
 use WMBH\Asana\Resources\TagResource;
 use WMBH\Asana\Resources\TaskResource;
+use WMBH\Asana\Resources\TaskTemplateResource;
 use WMBH\Asana\Resources\TeamResource;
 use WMBH\Asana\Resources\UserResource;
+use WMBH\Asana\Resources\UserTaskListResource;
 use WMBH\Asana\Resources\WebhookResource;
 use WMBH\Asana\Resources\WorkspaceResource;
 
@@ -44,6 +55,28 @@ class Asana
     private ?GoalResource $goalResource = null;
 
     private ?WebhookResource $webhookResource = null;
+
+    private ?TaskTemplateResource $taskTemplateResource = null;
+
+    private ?ProjectTemplateResource $projectTemplateResource = null;
+
+    private ?JobResource $jobResource = null;
+
+    private ?StatusUpdateResource $statusUpdateResource = null;
+
+    private ?ProjectBriefResource $projectBriefResource = null;
+
+    private ?EventResource $eventResource = null;
+
+    private ?CustomTypeResource $customTypeResource = null;
+
+    private ?UserTaskListResource $userTaskListResource = null;
+
+    private ?AccessRequestResource $accessRequestResource = null;
+
+    private ?ReactionResource $reactionResource = null;
+
+    private ?MembershipResource $membershipResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -114,6 +147,61 @@ class Asana
     public function webhooks(): WebhookResource
     {
         return $this->webhookResource ??= new WebhookResource($this->connector);
+    }
+
+    public function taskTemplates(): TaskTemplateResource
+    {
+        return $this->taskTemplateResource ??= new TaskTemplateResource($this->connector);
+    }
+
+    public function projectTemplates(): ProjectTemplateResource
+    {
+        return $this->projectTemplateResource ??= new ProjectTemplateResource($this->connector);
+    }
+
+    public function jobs(): JobResource
+    {
+        return $this->jobResource ??= new JobResource($this->connector);
+    }
+
+    public function statusUpdates(): StatusUpdateResource
+    {
+        return $this->statusUpdateResource ??= new StatusUpdateResource($this->connector);
+    }
+
+    public function projectBriefs(): ProjectBriefResource
+    {
+        return $this->projectBriefResource ??= new ProjectBriefResource($this->connector);
+    }
+
+    public function events(): EventResource
+    {
+        return $this->eventResource ??= new EventResource($this->connector);
+    }
+
+    public function customTypes(): CustomTypeResource
+    {
+        return $this->customTypeResource ??= new CustomTypeResource($this->connector);
+    }
+
+    public function userTaskLists(): UserTaskListResource
+    {
+        return $this->userTaskListResource ??= new UserTaskListResource($this->connector);
+    }
+
+    public function accessRequests(): AccessRequestResource
+    {
+        return $this->accessRequestResource ??= new AccessRequestResource($this->connector);
+    }
+
+    public function reactions(): ReactionResource
+    {
+        return $this->reactionResource ??= new ReactionResource($this->connector);
+    }
+
+    public function memberships(): MembershipResource
+    {
+        return $this->membershipResource ??= new MembershipResource($this->connector);
     }
 
     public function batch(): BatchResource

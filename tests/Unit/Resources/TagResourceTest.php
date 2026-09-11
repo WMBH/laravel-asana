@@ -2,6 +2,7 @@
 
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
 use WMBH\Asana\Data\TagData;
@@ -124,4 +125,38 @@ test('delete returns true on success', function () {
     $resource = createTagResource($mockClient);
 
     expect($resource->delete('300'))->toBeTrue();
+});
+
+test('list returns PaginatedResponse and forwards workspace', function () {
+    $mockClient = new MockClient([
+        MockResponse::make([
+            'data' => [
+                ['gid' => '1', 'name' => 'Priority', 'resource_type' => 'tag'],
+                ['gid' => '2', 'name' => 'Urgent', 'resource_type' => 'tag'],
+            ],
+            'next_page' => null,
+        ], 200),
+    ]);
+
+    $resource = createTagResource($mockClient);
+    $result = $resource->list('ws1', ['name'], 'abc', 10);
+
+    expect($result)->toBeInstanceOf(PaginatedResponse::class)
+        ->and($result->data)->toHaveCount(2)
+        ->and($result->data[0])->toBeInstanceOf(TagData::class)
+        ->and($result->hasNextPage())->toBeFalse();
+
+    $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/tags'
+        && $request->query()->all() === ['workspace' => 'ws1', 'opt_fields' => 'name', 'offset' => 'abc', 'limit' => 10]);
+});
+
+test('list without workspace sends no query', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [], 'next_page' => null], 200),
+    ]);
+
+    $resource = createTagResource($mockClient);
+    $resource->list();
+
+    $mockClient->assertSent(fn (Request $request) => $request->query()->all() === []);
 });

@@ -15,6 +15,14 @@ class GetSubgoalsRequest extends Request
 
     public function resolveEndpoint(): string
     {
-        return "/goals/{$this->goalGid}/subgoals";
+        return '/goal_relationships';
+    }
+
+    protected function defaultQuery(): array
+    {
+        return [
+            'supported_goal' => $this->goalGid,
+            'resource_subtype' => 'subgoal',
+        ];
     }
 }

@@ -60,8 +60,16 @@ class GoalResource
     public function getSubgoals(string $goalGid): PaginatedResponse
     {
         $response = $this->connector->send(new GetSubgoalsRequest($goalGid));
+        $json = $response->json();
 
-        return PaginatedResponse::fromResponse($response->json(), GoalData::class);
+        return new PaginatedResponse(
+            data: array_map(
+                fn (array $relationship) => CompactResource::from($relationship['supporting_resource']),
+                $json['data'] ?? [],
+            ),
+            nextPageToken: $json['next_page']['offset'] ?? null,
+            nextPageUri: $json['next_page']['uri'] ?? null,
+        );
     }
 
     public function addSubgoal(string $goalGid, string $subgoalGid): bool
