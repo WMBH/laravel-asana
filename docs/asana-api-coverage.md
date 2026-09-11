@@ -1,16 +1,16 @@
 # Asana API coverage tracker
 
-Generated 2026-09-11 from Asana's OpenAPI spec (`https://raw.githubusercontent.com/Asana/openapi/master/defs/asana_oas.yaml`) diffed against `src/Requests/**`. Regenerate when endpoints are added: match on HTTP method + path with `{gid}` segments normalized.
+Generated 2026-09-11 from Asana's OpenAPI spec (`https://raw.githubusercontent.com/Asana/openapi/master/defs/asana_oas.yaml`) diffed against `src/Requests/**`. Regenerate with the script in `docs/superpowers/plans/2026-09-11-api-coverage-upgrade.md` (Task 22) whenever endpoints are added: it matches on HTTP method + path with `{gid}` segments normalized.
 
 | | Endpoints |
 |---|---|
 | Total in spec | 249 |
-| Covered by package | 90 |
-| Missing, free/Starter tier (List 2) | 76 |
-| Missing, Advanced/Enterprise/add-on (List 1) | 79 |
+| Covered by package | 167 |
+| Missing, free/Starter tier (List 2) | 0 |
+| Missing, Advanced/Enterprise/add-on (List 1) | 78 |
 | Deprecated by Asana, skipped | 4 |
 
-Status legend: **covered** = a Request class exists (path shown). **MISSING — List 2** = free/Starter, planned. **MISSING — List 1** = paid tier in parentheses, awaiting owner review. Legacy-path rows are covered but hit an undocumented path (fixed in the 2026-09 plan).
+Status legend: **covered** = a Request class exists (path shown). **MISSING — List 2** = free/Starter, planned. **MISSING — List 1** = paid tier in parentheses, awaiting owner review.
 
 ## AI Studio usage API
 
@@ -23,10 +23,10 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/access_requests` | getAccessRequests | MISSING — List 2 |  |
-| POST | `/access_requests` | createAccessRequest | MISSING — List 2 |  |
-| POST | `/access_requests/{access_request_gid}/approve` | approveAccessRequest | MISSING — List 2 |  |
-| POST | `/access_requests/{access_request_gid}/reject` | rejectAccessRequest | MISSING — List 2 |  |
+| GET | `/access_requests` | getAccessRequests | covered | `AccessRequests/GetAccessRequestsRequest.php` |
+| POST | `/access_requests` | createAccessRequest | covered | `AccessRequests/CreateAccessRequestRequest.php` |
+| POST | `/access_requests/{access_request_gid}/approve` | approveAccessRequest | covered | `AccessRequests/ApproveAccessRequestRequest.php` |
+| POST | `/access_requests/{access_request_gid}/reject` | rejectAccessRequest | covered | `AccessRequests/RejectAccessRequestRequest.php` |
 
 ## Agents
 
@@ -51,7 +51,7 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 |---|---|---|---|---|
 | GET | `/attachments/{attachment_gid}` | getAttachment | covered | `Attachments/GetAttachmentRequest.php` |
 | DELETE | `/attachments/{attachment_gid}` | deleteAttachment | covered | `Attachments/DeleteAttachmentRequest.php` |
-| GET | `/attachments` | getAttachmentsForObject | covered | `Attachments/GetAttachmentsForTaskRequest.php (legacy path)` |
+| GET | `/attachments` | getAttachmentsForObject | covered | `Attachments/GetAttachmentsForObjectRequest.php` |
 | POST | `/attachments` | createAttachmentForObject | covered | `Attachments/CreateAttachmentRequest.php` |
 
 ## Audit log API
@@ -80,10 +80,10 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/projects/{project_gid}/custom_field_settings` | getCustomFieldSettingsForProject | MISSING — List 2 |  |
+| GET | `/projects/{project_gid}/custom_field_settings` | getCustomFieldSettingsForProject | covered | `CustomFields/GetCustomFieldSettingsForProjectRequest.php` |
 | GET | `/portfolios/{portfolio_gid}/custom_field_settings` | getCustomFieldSettingsForPortfolio | MISSING — List 1 (Advanced) |  |
 | GET | `/goals/{goal_gid}/custom_field_settings` | getCustomFieldSettingsForGoal | MISSING — List 1 (Advanced) |  |
-| GET | `/teams/{team_gid}/custom_field_settings` | getCustomFieldSettingsForTeam | MISSING — List 2 |  |
+| GET | `/teams/{team_gid}/custom_field_settings` | getCustomFieldSettingsForTeam | covered | `CustomFields/GetCustomFieldSettingsForTeamRequest.php` |
 
 ## Custom fields
 
@@ -94,22 +94,22 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 | PUT | `/custom_fields/{custom_field_gid}` | updateCustomField | covered | `CustomFields/UpdateCustomFieldRequest.php` |
 | DELETE | `/custom_fields/{custom_field_gid}` | deleteCustomField | covered | `CustomFields/DeleteCustomFieldRequest.php` |
 | GET | `/workspaces/{workspace_gid}/custom_fields` | getCustomFieldsForWorkspace | covered | `CustomFields/GetCustomFieldsForWorkspaceRequest.php` |
-| POST | `/custom_fields/{custom_field_gid}/enum_options` | createEnumOptionForCustomField | MISSING — List 2 |  |
-| POST | `/custom_fields/{custom_field_gid}/enum_options/insert` | insertEnumOptionForCustomField | MISSING — List 2 |  |
-| PUT | `/enum_options/{enum_option_gid}` | updateEnumOption | MISSING — List 2 |  |
+| POST | `/custom_fields/{custom_field_gid}/enum_options` | createEnumOptionForCustomField | covered | `CustomFields/CreateEnumOptionRequest.php` |
+| POST | `/custom_fields/{custom_field_gid}/enum_options/insert` | insertEnumOptionForCustomField | covered | `CustomFields/InsertEnumOptionRequest.php` |
+| PUT | `/enum_options/{enum_option_gid}` | updateEnumOption | covered | `CustomFields/UpdateEnumOptionRequest.php` |
 
 ## Custom types
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/custom_types` | getCustomTypes | MISSING — List 2 |  |
-| GET | `/custom_types/{custom_type_gid}` | getCustomType | MISSING — List 2 |  |
+| GET | `/custom_types` | getCustomTypes | covered | `CustomTypes/GetCustomTypesRequest.php` |
+| GET | `/custom_types/{custom_type_gid}` | getCustomType | covered | `CustomTypes/GetCustomTypeRequest.php` |
 
 ## Events
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/events` | getEvents | MISSING — List 2 |  |
+| GET | `/events` | getEvents | covered | `Events/GetEventsRequest.php` |
 
 ## Exports
 
@@ -124,8 +124,8 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 |---|---|---|---|---|
 | GET | `/goal_relationships/{goal_relationship_gid}` | getGoalRelationship | MISSING — List 1 (Advanced) |  |
 | PUT | `/goal_relationships/{goal_relationship_gid}` | updateGoalRelationship | MISSING — List 1 (Advanced) |  |
-| GET | `/goal_relationships` | getGoalRelationships | covered | `Goals/GetGoalRelationshipsRequest.php` |
-| POST | `/goals/{goal_gid}/addSupportingRelationship` | addSupportingRelationship | MISSING — List 1 (Advanced) |  |
+| GET | `/goal_relationships` | getGoalRelationships | covered | `Goals/GetSubgoalsRequest.php` |
+| POST | `/goals/{goal_gid}/addSupportingRelationship` | addSupportingRelationship | covered | `Goals/AddSubgoalRequest.php` |
 | POST | `/goals/{goal_gid}/removeSupportingRelationship` | removeSupportingRelationship | MISSING — List 1 (Advanced) |  |
 
 ## Goals
@@ -149,17 +149,17 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/jobs/{job_gid}` | getJob | MISSING — List 2 |  |
+| GET | `/jobs/{job_gid}` | getJob | covered | `Jobs/GetJobRequest.php` |
 
 ## Memberships
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/memberships` | getMemberships | MISSING — List 2 |  |
-| POST | `/memberships` | createMembership | MISSING — List 2 |  |
-| GET | `/memberships/{membership_gid}` | getMembership | MISSING — List 2 |  |
-| PUT | `/memberships/{membership_gid}` | updateMembership | MISSING — List 2 |  |
-| DELETE | `/memberships/{membership_gid}` | deleteMembership | MISSING — List 2 |  |
+| GET | `/memberships` | getMemberships | covered | `Memberships/GetMembershipsRequest.php` |
+| POST | `/memberships` | createMembership | covered | `Memberships/CreateMembershipRequest.php` |
+| GET | `/memberships/{membership_gid}` | getMembership | covered | `Memberships/GetMembershipRequest.php` |
+| PUT | `/memberships/{membership_gid}` | updateMembership | covered | `Memberships/UpdateMembershipRequest.php` |
+| DELETE | `/memberships/{membership_gid}` | deleteMembership | covered | `Memberships/DeleteMembershipRequest.php` |
 
 ## Ooo entries
 
@@ -208,17 +208,17 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/project_briefs/{project_brief_gid}` | getProjectBrief | MISSING — List 2 |  |
-| PUT | `/project_briefs/{project_brief_gid}` | updateProjectBrief | MISSING — List 2 |  |
-| DELETE | `/project_briefs/{project_brief_gid}` | deleteProjectBrief | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/project_briefs` | createProjectBrief | MISSING — List 2 |  |
+| GET | `/project_briefs/{project_brief_gid}` | getProjectBrief | covered | `ProjectBriefs/GetProjectBriefRequest.php` |
+| PUT | `/project_briefs/{project_brief_gid}` | updateProjectBrief | covered | `ProjectBriefs/UpdateProjectBriefRequest.php` |
+| DELETE | `/project_briefs/{project_brief_gid}` | deleteProjectBrief | covered | `ProjectBriefs/DeleteProjectBriefRequest.php` |
+| POST | `/projects/{project_gid}/project_briefs` | createProjectBrief | covered | `ProjectBriefs/CreateProjectBriefRequest.php` |
 
 ## Project memberships
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/project_memberships/{project_membership_gid}` | getProjectMembership | MISSING — List 2 |  |
-| GET | `/projects/{project_gid}/project_memberships` | getProjectMembershipsForProject | MISSING — List 2 |  |
+| GET | `/project_memberships/{project_membership_gid}` | getProjectMembership | covered | `Projects/GetProjectMembershipRequest.php` |
+| GET | `/projects/{project_gid}/project_memberships` | getProjectMembershipsForProject | covered | `Projects/GetProjectMembershipsRequest.php` |
 
 ## Project portfolio settings
 
@@ -242,11 +242,11 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/project_templates/{project_template_gid}` | getProjectTemplate | MISSING — List 2 |  |
-| DELETE | `/project_templates/{project_template_gid}` | deleteProjectTemplate | MISSING — List 2 |  |
-| GET | `/project_templates` | getProjectTemplates | MISSING — List 2 |  |
-| GET | `/teams/{team_gid}/project_templates` | getProjectTemplatesForTeam | MISSING — List 2 |  |
-| POST | `/project_templates/{project_template_gid}/instantiateProject` | instantiateProject | MISSING — List 2 |  |
+| GET | `/project_templates/{project_template_gid}` | getProjectTemplate | covered | `ProjectTemplates/GetProjectTemplateRequest.php` |
+| DELETE | `/project_templates/{project_template_gid}` | deleteProjectTemplate | covered | `ProjectTemplates/DeleteProjectTemplateRequest.php` |
+| GET | `/project_templates` | getProjectTemplates | covered | `ProjectTemplates/GetProjectTemplatesRequest.php` |
+| GET | `/teams/{team_gid}/project_templates` | getProjectTemplatesForTeam | covered | `ProjectTemplates/GetProjectTemplatesForTeamRequest.php` |
+| POST | `/project_templates/{project_template_gid}/instantiateProject` | instantiateProject | covered | `ProjectTemplates/InstantiateProjectRequest.php` |
 
 ## Projects
 
@@ -258,20 +258,20 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 | PUT | `/projects/{project_gid}` | updateProject | covered | `Projects/UpdateProjectRequest.php` |
 | DELETE | `/projects/{project_gid}` | deleteProject | covered | `Projects/DeleteProjectRequest.php` |
 | POST | `/projects/{project_gid}/duplicate` | duplicateProject | covered | `Projects/DuplicateProjectRequest.php` |
-| GET | `/tasks/{task_gid}/projects` | getProjectsForTask | MISSING — List 2 |  |
+| GET | `/tasks/{task_gid}/projects` | getProjectsForTask | covered | `Projects/GetProjectsForTaskRequest.php` |
 | GET | `/teams/{team_gid}/projects` | getProjectsForTeam | covered | `Projects/GetProjectsForTeamRequest.php` |
-| POST | `/teams/{team_gid}/projects` | createProjectForTeam | MISSING — List 2 |  |
-| GET | `/workspaces/{workspace_gid}/projects` | getProjectsForWorkspace | MISSING — List 2 |  |
-| POST | `/workspaces/{workspace_gid}/projects` | createProjectForWorkspace | MISSING — List 2 |  |
-| GET | `/workspaces/{workspace_gid}/projects/search` | searchProjectsForWorkspace | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/addCustomFieldSetting` | addCustomFieldSettingForProject | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/removeCustomFieldSetting` | removeCustomFieldSettingForProject | MISSING — List 2 |  |
+| POST | `/teams/{team_gid}/projects` | createProjectForTeam | covered | `Projects/CreateProjectForTeamRequest.php` |
+| GET | `/workspaces/{workspace_gid}/projects` | getProjectsForWorkspace | covered | `Projects/GetProjectsForWorkspaceRequest.php` |
+| POST | `/workspaces/{workspace_gid}/projects` | createProjectForWorkspace | covered | `Projects/CreateProjectForWorkspaceRequest.php` |
+| GET | `/workspaces/{workspace_gid}/projects/search` | searchProjectsForWorkspace | covered | `Projects/SearchProjectsRequest.php` |
+| POST | `/projects/{project_gid}/addCustomFieldSetting` | addCustomFieldSettingForProject | covered | `Projects/AddCustomFieldSettingToProjectRequest.php` |
+| POST | `/projects/{project_gid}/removeCustomFieldSetting` | removeCustomFieldSettingForProject | covered | `Projects/RemoveCustomFieldSettingFromProjectRequest.php` |
 | GET | `/projects/{project_gid}/task_counts` | getTaskCountsForProject | covered | `Projects/GetTaskCountsRequest.php` |
-| POST | `/projects/{project_gid}/addMembers` | addMembersForProject | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/removeMembers` | removeMembersForProject | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/addFollowers` | addFollowersForProject | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/removeFollowers` | removeFollowersForProject | MISSING — List 2 |  |
-| POST | `/projects/{project_gid}/saveAsTemplate` | projectSaveAsTemplate | MISSING — List 2 |  |
+| POST | `/projects/{project_gid}/addMembers` | addMembersForProject | covered | `Projects/AddMembersToProjectRequest.php` |
+| POST | `/projects/{project_gid}/removeMembers` | removeMembersForProject | covered | `Projects/RemoveMembersFromProjectRequest.php` |
+| POST | `/projects/{project_gid}/addFollowers` | addFollowersForProject | covered | `Projects/AddFollowersToProjectRequest.php` |
+| POST | `/projects/{project_gid}/removeFollowers` | removeFollowersForProject | covered | `Projects/RemoveFollowersFromProjectRequest.php` |
+| POST | `/projects/{project_gid}/saveAsTemplate` | projectSaveAsTemplate | covered | `Projects/SaveProjectAsTemplateRequest.php` |
 
 ## Rates
 
@@ -287,7 +287,7 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/reactions` | getReactionsOnObject | MISSING — List 2 |  |
+| GET | `/reactions` | getReactionsOnObject | covered | `Reactions/GetReactionsForObjectRequest.php` |
 
 ## Roles
 
@@ -321,10 +321,10 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/status_updates/{status_update_gid}` | getStatus | MISSING — List 2 |  |
-| DELETE | `/status_updates/{status_update_gid}` | deleteStatus | MISSING — List 2 |  |
-| GET | `/status_updates` | getStatusesForObject | MISSING — List 2 |  |
-| POST | `/status_updates` | createStatusForObject | MISSING — List 2 |  |
+| GET | `/status_updates/{status_update_gid}` | getStatus | covered | `StatusUpdates/GetStatusUpdateRequest.php` |
+| DELETE | `/status_updates/{status_update_gid}` | deleteStatus | covered | `StatusUpdates/DeleteStatusUpdateRequest.php` |
+| GET | `/status_updates` | getStatusesForObject | covered | `StatusUpdates/GetStatusUpdatesForObjectRequest.php` |
+| POST | `/status_updates` | createStatusForObject | covered | `StatusUpdates/CreateStatusUpdateRequest.php` |
 
 ## Stories
 
@@ -342,7 +342,7 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/tags` | getTags | MISSING — List 2 |  |
+| GET | `/tags` | getTags | covered | `Tags/GetTagsRequest.php` |
 | POST | `/tags` | createTag | covered | `Tags/CreateTagRequest.php` |
 | GET | `/tags/{tag_gid}` | getTag | covered | `Tags/GetTagRequest.php` |
 | PUT | `/tags/{tag_gid}` | updateTag | covered | `Tags/UpdateTagRequest.php` |
@@ -355,51 +355,51 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/task_templates` | getTaskTemplates | MISSING — List 2 |  |
-| GET | `/task_templates/{task_template_gid}` | getTaskTemplate | MISSING — List 2 |  |
-| DELETE | `/task_templates/{task_template_gid}` | deleteTaskTemplate | MISSING — List 2 |  |
-| POST | `/task_templates/{task_template_gid}/instantiateTask` | instantiateTask | MISSING — List 2 |  |
+| GET | `/task_templates` | getTaskTemplates | covered | `TaskTemplates/GetTaskTemplatesRequest.php` |
+| GET | `/task_templates/{task_template_gid}` | getTaskTemplate | covered | `TaskTemplates/GetTaskTemplateRequest.php` |
+| DELETE | `/task_templates/{task_template_gid}` | deleteTaskTemplate | covered | `TaskTemplates/DeleteTaskTemplateRequest.php` |
+| POST | `/task_templates/{task_template_gid}/instantiateTask` | instantiateTask | covered | `TaskTemplates/InstantiateTaskRequest.php` |
 
 ## Tasks
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/tasks` | getTasks | MISSING — List 2 |  |
+| GET | `/tasks` | getTasks | covered | `Tasks/GetTasksRequest.php` |
 | POST | `/tasks` | createTask | covered | `Tasks/CreateTaskRequest.php` |
 | GET | `/tasks/{task_gid}` | getTask | covered | `Tasks/GetTaskRequest.php` |
 | PUT | `/tasks/{task_gid}` | updateTask | covered | `Tasks/UpdateTaskRequest.php` |
 | DELETE | `/tasks/{task_gid}` | deleteTask | covered | `Tasks/DeleteTaskRequest.php` |
-| POST | `/tasks/{task_gid}/duplicate` | duplicateTask | MISSING — List 2 |  |
+| POST | `/tasks/{task_gid}/duplicate` | duplicateTask | covered | `Tasks/DuplicateTaskRequest.php` |
 | GET | `/projects/{project_gid}/tasks` | getTasksForProject | covered | `Tasks/GetTasksForProjectRequest.php` |
 | GET | `/sections/{section_gid}/tasks` | getTasksForSection | covered | `Tasks/GetTasksForSectionRequest.php` |
-| GET | `/tags/{tag_gid}/tasks` | getTasksForTag | MISSING — List 2 |  |
-| GET | `/user_task_lists/{user_task_list_gid}/tasks` | getTasksForUserTaskList | MISSING — List 2 |  |
+| GET | `/tags/{tag_gid}/tasks` | getTasksForTag | covered | `Tasks/GetTasksForTagRequest.php` |
+| GET | `/user_task_lists/{user_task_list_gid}/tasks` | getTasksForUserTaskList | covered | `Tasks/GetTasksForUserTaskListRequest.php` |
 | GET | `/tasks/{task_gid}/subtasks` | getSubtasksForTask | covered | `Tasks/GetSubtasksRequest.php` |
-| POST | `/tasks/{task_gid}/subtasks` | createSubtaskForTask | MISSING — List 2 |  |
+| POST | `/tasks/{task_gid}/subtasks` | createSubtaskForTask | covered | `Tasks/CreateSubtaskRequest.php` |
 | POST | `/tasks/{task_gid}/setParent` | setParentForTask | covered | `Tasks/SetParentRequest.php` |
 | GET | `/tasks/{task_gid}/dependencies` | getDependenciesForTask | covered | `Tasks/GetDependenciesRequest.php` |
 | POST | `/tasks/{task_gid}/addDependencies` | addDependenciesForTask | covered | `Tasks/AddDependenciesRequest.php` |
-| POST | `/tasks/{task_gid}/removeDependencies` | removeDependenciesForTask | MISSING — List 2 |  |
+| POST | `/tasks/{task_gid}/removeDependencies` | removeDependenciesForTask | covered | `Tasks/RemoveDependenciesRequest.php` |
 | GET | `/tasks/{task_gid}/dependents` | getDependentsForTask | covered | `Tasks/GetDependentsRequest.php` |
 | POST | `/tasks/{task_gid}/addDependents` | addDependentsForTask | covered | `Tasks/AddDependentsRequest.php` |
-| POST | `/tasks/{task_gid}/removeDependents` | removeDependentsForTask | MISSING — List 2 |  |
+| POST | `/tasks/{task_gid}/removeDependents` | removeDependentsForTask | covered | `Tasks/RemoveDependentsRequest.php` |
 | POST | `/tasks/{task_gid}/addProject` | addProjectForTask | covered | `Tasks/AddProjectToTaskRequest.php` |
 | POST | `/tasks/{task_gid}/removeProject` | removeProjectForTask | covered | `Tasks/RemoveProjectFromTaskRequest.php` |
 | POST | `/tasks/{task_gid}/addTag` | addTagForTask | covered | `Tasks/AddTagToTaskRequest.php` |
 | POST | `/tasks/{task_gid}/removeTag` | removeTagForTask | covered | `Tasks/RemoveTagFromTaskRequest.php` |
 | POST | `/tasks/{task_gid}/addFollowers` | addFollowersForTask | covered | `Tasks/AddFollowersRequest.php` |
-| POST | `/tasks/{task_gid}/removeFollowers` | removeFollowerForTask | MISSING — List 2 |  |
-| GET | `/workspaces/{workspace_gid}/tasks/custom_id/{custom_id}` | getTaskForCustomID | MISSING — List 2 |  |
+| POST | `/tasks/{task_gid}/removeFollowers` | removeFollowerForTask | covered | `Tasks/RemoveFollowersRequest.php` |
+| GET | `/workspaces/{workspace_gid}/tasks/custom_id/{custom_id}` | getTaskForCustomID | covered | `Tasks/GetTaskByCustomIdRequest.php` |
 | GET | `/workspaces/{workspace_gid}/tasks/search` | searchTasksForWorkspace | covered | `Tasks/SearchTasksRequest.php` |
 
 ## Team memberships
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/team_memberships/{team_membership_gid}` | getTeamMembership | MISSING — List 2 |  |
-| GET | `/team_memberships` | getTeamMemberships | MISSING — List 2 |  |
-| GET | `/teams/{team_gid}/team_memberships` | getTeamMembershipsForTeam | MISSING — List 2 |  |
-| GET | `/users/{user_gid}/team_memberships` | getTeamMembershipsForUser | MISSING — List 2 |  |
+| GET | `/team_memberships/{team_membership_gid}` | getTeamMembership | covered | `Teams/GetTeamMembershipRequest.php` |
+| GET | `/team_memberships` | getTeamMemberships | covered | `Teams/GetTeamMembershipsRequest.php` |
+| GET | `/teams/{team_gid}/team_memberships` | getTeamMembershipsForTeam | covered | `Teams/GetTeamMembershipsForTeamRequest.php` |
+| GET | `/users/{user_gid}/team_memberships` | getTeamMembershipsForUser | covered | `Teams/GetTeamMembershipsForUserRequest.php` |
 
 ## Teams
 
@@ -407,8 +407,8 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 |---|---|---|---|---|
 | POST | `/teams` | createTeam | covered | `Teams/CreateTeamRequest.php` |
 | GET | `/teams/{team_gid}` | getTeam | covered | `Teams/GetTeamRequest.php` |
-| PUT | `/teams/{team_gid}` | updateTeam | MISSING — List 2 |  |
-| GET | `/workspaces/{workspace_gid}/teams` | getTeamsForWorkspace | covered | `Teams/GetTeamsForWorkspaceRequest.php (legacy path)` |
+| PUT | `/teams/{team_gid}` | updateTeam | covered | `Teams/UpdateTeamRequest.php` |
+| GET | `/workspaces/{workspace_gid}/teams` | getTeamsForWorkspace | covered | `Teams/GetTeamsForWorkspaceRequest.php` |
 | GET | `/users/{user_gid}/teams` | getTeamsForUser | covered | `Teams/GetTeamsForUserRequest.php` |
 | POST | `/teams/{team_gid}/addUser` | addUserForTeam | covered | `Teams/AddUserToTeamRequest.php` |
 | POST | `/teams/{team_gid}/removeUser` | removeUserForTeam | covered | `Teams/RemoveUserFromTeamRequest.php` |
@@ -455,14 +455,14 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/workspaces/{workspace_gid}/typeahead` | typeaheadForWorkspace | MISSING — List 2 |  |
+| GET | `/workspaces/{workspace_gid}/typeahead` | typeaheadForWorkspace | covered | `Workspaces/TypeaheadRequest.php` |
 
 ## User task lists
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/user_task_lists/{user_task_list_gid}` | getUserTaskList | MISSING — List 2 |  |
-| GET | `/users/{user_gid}/user_task_list` | getUserTaskListForUser | MISSING — List 2 |  |
+| GET | `/user_task_lists/{user_task_list_gid}` | getUserTaskList | covered | `UserTaskLists/GetUserTaskListRequest.php` |
+| GET | `/users/{user_gid}/user_task_list` | getUserTaskListForUser | covered | `UserTaskLists/GetUserTaskListForUserRequest.php` |
 
 ## Users
 
@@ -470,12 +470,12 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 |---|---|---|---|---|
 | GET | `/users` | getUsers | covered | `Users/GetUsersRequest.php` |
 | GET | `/users/{user_gid}` | getUser | covered | `Users/GetUserRequest.php` |
-| PUT | `/users/{user_gid}` | updateUser | MISSING — List 2 |  |
-| GET | `/users/{user_gid}/favorites` | getFavoritesForUser | MISSING — List 2 |  |
+| PUT | `/users/{user_gid}` | updateUser | covered | `Users/UpdateUserRequest.php` |
+| GET | `/users/{user_gid}/favorites` | getFavoritesForUser | covered | `Users/GetFavoritesForUserRequest.php` |
 | GET | `/teams/{team_gid}/users` | getUsersForTeam | covered | `Users/GetUsersForTeamRequest.php` |
 | GET | `/workspaces/{workspace_gid}/users` | getUsersForWorkspace | covered | `Users/GetUsersForWorkspaceRequest.php` |
-| GET | `/workspaces/{workspace_gid}/users/{user_gid}` | getUserForWorkspace | MISSING — List 2 |  |
-| PUT | `/workspaces/{workspace_gid}/users/{user_gid}` | updateUserForWorkspace | MISSING — List 2 |  |
+| GET | `/workspaces/{workspace_gid}/users/{user_gid}` | getUserForWorkspace | covered | `Users/GetUserForWorkspaceRequest.php` |
+| PUT | `/workspaces/{workspace_gid}/users/{user_gid}` | updateUserForWorkspace | covered | `Users/UpdateUserForWorkspaceRequest.php` |
 
 ## Webhooks
 
@@ -491,9 +491,9 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 
 | Method | Path | operationId | Status | Package request |
 |---|---|---|---|---|
-| GET | `/workspace_memberships/{workspace_membership_gid}` | getWorkspaceMembership | MISSING — List 2 |  |
-| GET | `/users/{user_gid}/workspace_memberships` | getWorkspaceMembershipsForUser | MISSING — List 2 |  |
-| GET | `/workspaces/{workspace_gid}/workspace_memberships` | getWorkspaceMembershipsForWorkspace | MISSING — List 2 |  |
+| GET | `/workspace_memberships/{workspace_membership_gid}` | getWorkspaceMembership | covered | `Workspaces/GetWorkspaceMembershipRequest.php` |
+| GET | `/users/{user_gid}/workspace_memberships` | getWorkspaceMembershipsForUser | covered | `Workspaces/GetWorkspaceMembershipsForUserRequest.php` |
+| GET | `/workspaces/{workspace_gid}/workspace_memberships` | getWorkspaceMembershipsForWorkspace | covered | `Workspaces/GetWorkspaceMembershipsRequest.php` |
 
 ## Workspaces
 
@@ -504,4 +504,4 @@ Status legend: **covered** = a Request class exists (path shown). **MISSING — 
 | PUT | `/workspaces/{workspace_gid}` | updateWorkspace | covered | `Workspaces/UpdateWorkspaceRequest.php` |
 | POST | `/workspaces/{workspace_gid}/addUser` | addUserForWorkspace | covered | `Workspaces/AddUserToWorkspaceRequest.php` |
 | POST | `/workspaces/{workspace_gid}/removeUser` | removeUserForWorkspace | covered | `Workspaces/RemoveUserFromWorkspaceRequest.php` |
-| GET | `/workspaces/{workspace_gid}/events` | getWorkspaceEvents | MISSING — List 2 |  |
+| GET | `/workspaces/{workspace_gid}/events` | getWorkspaceEvents | covered | `Events/GetWorkspaceEventsRequest.php` |
