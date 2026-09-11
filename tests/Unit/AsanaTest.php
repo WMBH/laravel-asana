@@ -12,6 +12,7 @@ use WMBH\Asana\Resources\CustomTypeResource;
 use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\JobResource;
+use WMBH\Asana\Resources\MembershipResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
@@ -56,6 +57,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->userTaskLists())->toBeInstanceOf(UserTaskListResource::class)
         ->and($asana->accessRequests())->toBeInstanceOf(AccessRequestResource::class)
         ->and($asana->reactions())->toBeInstanceOf(ReactionResource::class)
+        ->and($asana->memberships())->toBeInstanceOf(MembershipResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 

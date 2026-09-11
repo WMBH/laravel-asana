@@ -241,6 +241,24 @@ arch('GetReactionsForObjectRequest sends GET')
     ->expect('WMBH\Asana\Requests\Reactions\GetReactionsForObjectRequest')
     ->toSendGetRequest();
 
+arch('GetMembershipsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Memberships\GetMembershipsRequest')
+    ->toSendGetRequest();
+
+arch('CreateMembershipRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Memberships\CreateMembershipRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('UpdateMembershipRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\Memberships\UpdateMembershipRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('DeleteMembershipRequest sends DELETE')
+    ->expect('WMBH\Asana\Requests\Memberships\DeleteMembershipRequest')
+    ->toSendDeleteRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

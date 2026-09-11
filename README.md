@@ -76,6 +76,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Portfolios](#portfolios)
 - [Goals](#goals)
 - [Webhooks](#webhooks)
+- [Memberships](#memberships)
 - [Status Updates](#status-updates)
 - [Project Briefs](#project-briefs)
 - [Events](#events)
@@ -1287,6 +1288,55 @@ foreach ($thumbs->data as $reaction) {
 | `gid` | `string` | Globally unique identifier |
 | `emoji` | `?string` | The exact emoji used (may include a skin-tone variant) |
 | `user` | `?CompactResource` | User who reacted |
+
+---
+
+### Memberships
+
+Access via `Asana::memberships()` — returns `MembershipResource`. One endpoint for memberships on projects, portfolios, goals, custom fields and custom types.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $parentGid = null`, `?string $memberGid = null`, `?string $resourceSubtype = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List memberships filtered by parent, member and/or subtype |
+| `get` | `string $gid` | `MembershipData` | Get a membership |
+| `create` | `array $data` | `MembershipData` | Create a membership (`parent`, `member`, `access_level`, `role`) |
+| `update` | `string $gid`, `array $data` | `MembershipData` | Update a membership (`access_level`) |
+| `delete` | `string $gid` | `bool` | Delete a membership |
+
+```php
+// List memberships on a project
+$memberships = Asana::memberships()->list('project_gid');
+
+// Add a user to a portfolio as editor
+$membership = Asana::memberships()->create([
+    'parent' => 'portfolio_gid',
+    'member' => 'user_gid',
+    'access_level' => 'editor',
+]);
+
+// Change access level
+Asana::memberships()->update($membership->gid, ['access_level' => 'viewer']);
+
+// Remove
+Asana::memberships()->delete($membership->gid);
+```
+
+#### MembershipData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | e.g. `"project_membership"`, `"goal_membership"` |
+| `resource_subtype` | `?string` | Membership subtype |
+| `parent` | `?CompactResource` | The project / portfolio / goal / custom field / custom type |
+| `member` | `?CompactResource` | The user or team |
+| `access_level` | `?string` | `"admin"`, `"editor"`, `"commenter"`, or `"viewer"` |
+| `role` | `?string` | Goal memberships only: `"editor"` or `"commenter"` |
+| `user` | `?CompactResource` | The user (project / goal memberships) |
+| `goal` | `?CompactResource` | The goal (goal memberships) |
+| `workspace` | `?CompactResource` | The workspace (goal memberships) |
+| `project` | `?CompactResource` | The project (project memberships) |
+| `write_access` | `?string` | Project memberships only |
 
 ---
 

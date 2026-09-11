@@ -10,6 +10,7 @@ use WMBH\Asana\Resources\CustomTypeResource;
 use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\JobResource;
+use WMBH\Asana\Resources\MembershipResource;
 use WMBH\Asana\Resources\PortfolioResource;
 use WMBH\Asana\Resources\ProjectBriefResource;
 use WMBH\Asana\Resources\ProjectResource;
@@ -74,6 +75,8 @@ class Asana
     private ?AccessRequestResource $accessRequestResource = null;
 
     private ?ReactionResource $reactionResource = null;
+
+    private ?MembershipResource $membershipResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -194,6 +197,11 @@ class Asana
     public function reactions(): ReactionResource
     {
         return $this->reactionResource ??= new ReactionResource($this->connector);
+    }
+
+    public function memberships(): MembershipResource
+    {
+        return $this->membershipResource ??= new MembershipResource($this->connector);
     }
 
     public function batch(): BatchResource
