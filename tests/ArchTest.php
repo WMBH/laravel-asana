@@ -138,6 +138,33 @@ arch('GetJobRequest sends GET')
     ->expect('WMBH\Asana\Requests\Jobs\GetJobRequest')
     ->toSendGetRequest();
 
+arch('GetTasksRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Tasks\GetTasksRequest')
+    ->toSendGetRequest();
+
+arch('GetTaskByCustomIdRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Tasks\GetTaskByCustomIdRequest')
+    ->toSendGetRequest();
+
+arch('DuplicateTaskRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Tasks\DuplicateTaskRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('CreateSubtaskRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Tasks\CreateSubtaskRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('RemoveFollowersRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Tasks\RemoveFollowersRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('GetTagsRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Tags\GetTagsRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

@@ -107,6 +107,15 @@ Access via `Asana::tasks()` — returns `TaskResource`.
 | `getDependents` | `string $taskGid` | `PaginatedResponse` | Get task dependents |
 | `addDependencies` | `string $taskGid`, `array $dependencyGids` | `void` | Add dependencies to a task |
 | `addDependents` | `string $taskGid`, `array $dependentGids` | `void` | Add dependents to a task |
+| `list` | `array $params = []`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tasks by `assignee`, `project`, `section`, `workspace`, `completed_since`, `modified_since`, `custom_type` |
+| `duplicate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Duplicate a task (async, see [Jobs](#jobs)) |
+| `getForTag` | `string $tagGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tasks with a tag |
+| `getForUserTaskList` | `string $userTaskListGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null`, `?string $completedSince = null` | `PaginatedResponse` | List tasks in a user's My Tasks list |
+| `createSubtask` | `string $taskGid`, `array $data`, `array $optFields = []` | `TaskData` | Create a subtask under a task |
+| `removeDependencies` | `string $taskGid`, `array $dependencyGids` | `void` | Remove dependencies from a task |
+| `removeDependents` | `string $taskGid`, `array $dependentGids` | `void` | Remove dependents from a task |
+| `removeFollowers` | `string $taskGid`, `array $followers` | `void` | Remove followers from a task |
+| `getByCustomId` | `string $workspaceGid`, `string $customId` | `TaskData` | Get a task by its custom ID (e.g. `ENG-42`) |
 
 ```php
 use WMBH\Asana\Facades\Asana;
@@ -149,6 +158,19 @@ Asana::tasks()->setParent('task_gid', 'parent_task_gid');
 Asana::tasks()->addDependencies('task_gid', ['blocker_task_1', 'blocker_task_2']);
 Asana::tasks()->addDependents('task_gid', ['blocked_task_1']);
 $deps = Asana::tasks()->getDependencies('task_gid');
+
+// List tasks across a workspace for the current user
+$page = Asana::tasks()->list(['assignee' => 'me', 'workspace' => 'workspace_gid', 'completed_since' => 'now']);
+
+// Subtasks, duplication and custom IDs
+$subtask = Asana::tasks()->createSubtask('task_gid', ['name' => 'Write tests']);
+$job = Asana::tasks()->duplicate('task_gid', ['name' => 'Copy of task', 'include' => 'notes,assignee,subtasks']);
+$task = Asana::tasks()->getByCustomId('workspace_gid', 'ENG-42');
+
+// Removing relationships
+Asana::tasks()->removeFollowers('task_gid', ['user_gid_1']);
+Asana::tasks()->removeDependencies('task_gid', ['blocker_task_1']);
+Asana::tasks()->removeDependents('task_gid', ['blocked_task_1']);
 ```
 
 #### TaskData Properties
@@ -594,6 +616,7 @@ Access via `Asana::tags()` — returns `TagResource`.
 | Method | Parameters | Returns | Description |
 |--------|-----------|---------|-------------|
 | `get` | `string $gid`, `array $optFields = []` | `TagData` | Get a tag |
+| `list` | `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List tags, optionally filtered by workspace |
 | `getForTask` | `string $taskGid`, `array $optFields = []` | `PaginatedResponse` | List tags on a task |
 | `getForWorkspace` | `string $workspaceGid`, `array $optFields = []` | `PaginatedResponse` | List tags in a workspace |
 | `create` | `array $data` | `TagData` | Create a tag |
@@ -602,6 +625,9 @@ Access via `Asana::tags()` — returns `TagResource`.
 | `delete` | `string $gid` | `bool` | Delete a tag |
 
 ```php
+// List tags, paginated
+$page = Asana::tags()->list('workspace_gid', limit: 50);
+
 // List tags in a workspace
 $tags = Asana::tags()->getForWorkspace('workspace_gid');
 

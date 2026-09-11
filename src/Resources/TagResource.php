@@ -11,6 +11,7 @@ use WMBH\Asana\Requests\Tags\DeleteTagRequest;
 use WMBH\Asana\Requests\Tags\GetTagRequest;
 use WMBH\Asana\Requests\Tags\GetTagsForTaskRequest;
 use WMBH\Asana\Requests\Tags\GetTagsForWorkspaceRequest;
+use WMBH\Asana\Requests\Tags\GetTagsRequest;
 use WMBH\Asana\Requests\Tags\UpdateTagRequest;
 
 class TagResource
@@ -24,6 +25,13 @@ class TagResource
         $response = $this->connector->send(new GetTagRequest($gid, $optFields));
 
         return TagData::from($response->json('data'));
+    }
+
+    public function list(?string $workspaceGid = null, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse
+    {
+        $response = $this->connector->send(new GetTagsRequest($workspaceGid, $optFields, $offset, $limit));
+
+        return PaginatedResponse::fromResponse($response->json(), TagData::class);
     }
 
     public function getForTask(string $taskGid, array $optFields = []): PaginatedResponse
