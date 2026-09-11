@@ -3,10 +3,12 @@
 namespace WMBH\Asana\Resources;
 
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\CustomFieldSettingData;
 use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
 use WMBH\Asana\Data\ProjectMembershipData;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
+use WMBH\Asana\Requests\Projects\AddCustomFieldSettingToProjectRequest;
 use WMBH\Asana\Requests\Projects\CreateProjectRequest;
 use WMBH\Asana\Requests\Projects\DeleteProjectRequest;
 use WMBH\Asana\Requests\Projects\DuplicateProjectRequest;
@@ -16,6 +18,7 @@ use WMBH\Asana\Requests\Projects\GetProjectRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsForTeamRequest;
 use WMBH\Asana\Requests\Projects\GetProjectsRequest;
 use WMBH\Asana\Requests\Projects\GetTaskCountsRequest;
+use WMBH\Asana\Requests\Projects\RemoveCustomFieldSettingFromProjectRequest;
 use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
 use WMBH\Asana\Requests\Projects\UpdateProjectRequest;
 
@@ -79,6 +82,18 @@ class ProjectResource
         $response = $this->connector->send(new GetTaskCountsRequest($gid));
 
         return $response->json('data');
+    }
+
+    public function addCustomFieldSetting(string $gid, array $data, array $optFields = []): CustomFieldSettingData
+    {
+        $response = $this->connector->send(new AddCustomFieldSettingToProjectRequest($gid, $data, $optFields));
+
+        return CustomFieldSettingData::from($response->json('data'));
+    }
+
+    public function removeCustomFieldSetting(string $gid, string $customFieldGid): void
+    {
+        $this->connector->send(new RemoveCustomFieldSettingFromProjectRequest($gid, $customFieldGid));
     }
 
     public function getMemberships(string $gid, ?string $userGid = null, array $optFields = [], ?string $offset = null, ?int $limit = null): PaginatedResponse

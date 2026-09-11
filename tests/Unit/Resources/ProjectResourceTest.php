@@ -4,10 +4,13 @@ use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
 use Saloon\Http\Request;
 use WMBH\Asana\AsanaConnector;
+use WMBH\Asana\Data\CustomFieldSettingData;
 use WMBH\Asana\Data\JobData;
 use WMBH\Asana\Data\ProjectData;
 use WMBH\Asana\Data\ProjectMembershipData;
+use WMBH\Asana\Data\Shared\CompactResource;
 use WMBH\Asana\Data\Shared\PaginatedResponse;
+use WMBH\Asana\Requests\Projects\RemoveCustomFieldSettingFromProjectRequest;
 use WMBH\Asana\Requests\Projects\SaveProjectAsTemplateRequest;
 use WMBH\Asana\Resources\ProjectResource;
 
@@ -249,4 +252,44 @@ test('getMembership returns ProjectMembershipData', function () {
 
     $mockClient->assertSent(fn (Request $request) => $request->resolveEndpoint() === '/project_memberships/700'
         && $request->query()->all() === ['opt_fields' => 'write_access']);
+});
+
+test('addCustomFieldSetting returns CustomFieldSettingData', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => [
+            'gid' => '55',
+            'resource_type' => 'custom_field_setting',
+            'is_important' => true,
+            'project' => ['gid' => '789', 'resource_type' => 'project', 'name' => 'Test Project'],
+        ]], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $result = $resource->addCustomFieldSetting('789', ['custom_field' => '900', 'is_important' => true]);
+
+    expect($result)->toBeInstanceOf(CustomFieldSettingData::class)
+        ->and($result->gid)->toBe('55')
+        ->and($result->is_important)->toBeTrue()
+        ->and($result->project)->toBeInstanceOf(CompactResource::class)
+        ->and($result->project->gid)->toBe('789');
+
+    $mockClient->assertSent(function ($request) {
+        return $request->resolveEndpoint() === '/projects/789/addCustomFieldSetting'
+            && $request->body()->all() === ['data' => ['custom_field' => '900', 'is_important' => true]];
+    });
+});
+
+test('removeCustomFieldSetting sends request with custom_field in body', function () {
+    $mockClient = new MockClient([
+        MockResponse::make(['data' => []], 200),
+    ]);
+
+    $resource = createProjectResource($mockClient);
+    $resource->removeCustomFieldSetting('789', '900');
+
+    $mockClient->assertSent(function ($request) {
+        return $request instanceof RemoveCustomFieldSettingFromProjectRequest
+            && $request->resolveEndpoint() === '/projects/789/removeCustomFieldSetting'
+            && $request->body()->all() === ['data' => ['custom_field' => '900']];
+    });
 });

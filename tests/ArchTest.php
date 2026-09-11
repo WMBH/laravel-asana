@@ -318,6 +318,25 @@ arch('GetWorkspaceMembershipsForUserRequest sends GET')
     ->expect('WMBH\Asana\Requests\Workspaces\GetWorkspaceMembershipsForUserRequest')
     ->toSendGetRequest();
 
+arch('GetCustomFieldSettingsForProjectRequest sends GET')
+    ->expect('WMBH\Asana\Requests\CustomFields\GetCustomFieldSettingsForProjectRequest')
+    ->toSendGetRequest();
+
+arch('CreateEnumOptionRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\CustomFields\CreateEnumOptionRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
+arch('UpdateEnumOptionRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\CustomFields\UpdateEnumOptionRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('RemoveCustomFieldSettingFromProjectRequest sends POST with JSON body')
+    ->expect('WMBH\Asana\Requests\Projects\RemoveCustomFieldSettingFromProjectRequest')
+    ->toSendPostRequest()
+    ->toHaveJsonBody();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

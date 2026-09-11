@@ -317,6 +317,8 @@ Access via `Asana::projects()` — returns `ProjectResource`.
 | `delete` | `string $gid` | `bool` | Delete a project |
 | `duplicate` | `string $gid`, `array $data` | `array` | Duplicate a project (returns job) |
 | `getTaskCounts` | `string $gid` | `array` | Get task count breakdown |
+| `addCustomFieldSetting` | `string $gid`, `array $data`, `array $optFields = []` | `CustomFieldSettingData` | Add a custom field to a project (`custom_field`, `is_important`, `insert_before` / `insert_after`) |
+| `removeCustomFieldSetting` | `string $gid`, `string $customFieldGid` | `void` | Remove a custom field from a project |
 | `getMemberships` | `string $gid`, `?string $userGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List project memberships (items are `ProjectMembershipData`) |
 | `getMembership` | `string $membershipGid`, `array $optFields = []` | `ProjectMembershipData` | Get a single project membership |
 | `saveAsTemplate` | `string $gid`, `array $data`, `array $optFields = []` | `JobData` | Save the project as a project template (async) |
@@ -890,6 +892,11 @@ Access via `Asana::customFields()` — returns `CustomFieldResource`.
 | `create` | `array $data` | `CustomFieldData` | Create a custom field |
 | `update` | `string $gid`, `array $data` | `CustomFieldData` | Update a custom field |
 | `delete` | `string $gid` | `bool` | Delete a custom field |
+| `getSettingsForProject` | `string $projectGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List custom field settings on a project |
+| `getSettingsForTeam` | `string $teamGid`, `array $optFields = []` | `PaginatedResponse` | List custom field settings on a team |
+| `createEnumOption` | `string $customFieldGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Add an enum option to a custom field |
+| `insertEnumOption` | `string $customFieldGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Move an enum option (`enum_option`, `before_enum_option` / `after_enum_option`) |
+| `updateEnumOption` | `string $enumOptionGid`, `array $data`, `array $optFields = []` | `EnumOptionData` | Update an enum option |
 
 ```php
 // List custom fields in a workspace
@@ -925,6 +932,18 @@ Asana::customFields()->update('field_gid', ['name' => 'Effort Points']);
 
 // Delete a custom field
 Asana::customFields()->delete('field_gid');
+
+// Custom field settings on a project / team
+$settings = Asana::customFields()->getSettingsForProject('project_gid');
+$teamSettings = Asana::customFields()->getSettingsForTeam('team_gid');
+
+// Enum options: add, reorder, update
+$option = Asana::customFields()->createEnumOption('field_gid', ['name' => 'Urgent', 'color' => 'red']);
+Asana::customFields()->insertEnumOption('field_gid', [
+    'enum_option' => $option->gid,
+    'before_enum_option' => 'other_option_gid',
+]);
+Asana::customFields()->updateEnumOption($option->gid, ['name' => 'Critical', 'enabled' => false]);
 ```
 
 #### CustomFieldData Properties
@@ -946,6 +965,28 @@ Asana::customFields()->delete('field_gid');
 | `custom_label_position` | `?string` | `"prefix"` or `"suffix"` |
 | `is_global_to_workspace` | `?bool` | Available across the workspace |
 | `has_notifications_enabled` | `?bool` | Notifications on change |
+
+
+#### CustomFieldSettingData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"custom_field_setting"` |
+| `project` | `?CompactResource` | Project the setting belongs to (deprecated by Asana, prefer `parent`) |
+| `parent` | `?CompactResource` | Project, portfolio, or goal the setting belongs to |
+| `is_important` | `?bool` | Shown prominently in the project |
+| `custom_field` | `?array` | The custom field record |
+
+#### EnumOptionData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"enum_option"` |
+| `name` | `?string` | Option name |
+| `enabled` | `?bool` | Whether the option can be selected |
+| `color` | `?string` | Option color |
 
 ---
 
