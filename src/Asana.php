@@ -5,6 +5,7 @@ namespace WMBH\Asana;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
+use WMBH\Asana\Resources\CustomTypeResource;
 use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\JobResource;
@@ -62,6 +63,8 @@ class Asana
     private ?ProjectBriefResource $projectBriefResource = null;
 
     private ?EventResource $eventResource = null;
+
+    private ?CustomTypeResource $customTypeResource = null;
 
     private ?BatchResource $batchResource = null;
 
@@ -162,6 +165,11 @@ class Asana
     public function events(): EventResource
     {
         return $this->eventResource ??= new EventResource($this->connector);
+    }
+
+    public function customTypes(): CustomTypeResource
+    {
+        return $this->customTypeResource ??= new CustomTypeResource($this->connector);
     }
 
     public function batch(): BatchResource

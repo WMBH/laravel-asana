@@ -204,6 +204,14 @@ arch('GetWorkspaceEventsRequest sends GET')
     ->expect('WMBH\Asana\Requests\Events\GetWorkspaceEventsRequest')
     ->toSendGetRequest();
 
+arch('GetCustomTypesRequest sends GET')
+    ->expect('WMBH\Asana\Requests\CustomTypes\GetCustomTypesRequest')
+    ->toSendGetRequest();
+
+arch('GetCustomTypeRequest sends GET')
+    ->expect('WMBH\Asana\Requests\CustomTypes\GetCustomTypeRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')

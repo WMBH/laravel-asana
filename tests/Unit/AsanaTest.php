@@ -7,6 +7,7 @@ use WMBH\Asana\AsanaConnector;
 use WMBH\Asana\Resources\AttachmentResource;
 use WMBH\Asana\Resources\BatchResource;
 use WMBH\Asana\Resources\CustomFieldResource;
+use WMBH\Asana\Resources\CustomTypeResource;
 use WMBH\Asana\Resources\EventResource;
 use WMBH\Asana\Resources\GoalResource;
 use WMBH\Asana\Resources\JobResource;
@@ -48,6 +49,7 @@ test('Asana class returns resource instances', function () {
         ->and($asana->statusUpdates())->toBeInstanceOf(StatusUpdateResource::class)
         ->and($asana->projectBriefs())->toBeInstanceOf(ProjectBriefResource::class)
         ->and($asana->events())->toBeInstanceOf(EventResource::class)
+        ->and($asana->customTypes())->toBeInstanceOf(CustomTypeResource::class)
         ->and($asana->batch())->toBeInstanceOf(BatchResource::class);
 });
 

@@ -79,6 +79,7 @@ All methods are accessed through the `Asana` facade. Each resource returns typed
 - [Status Updates](#status-updates)
 - [Project Briefs](#project-briefs)
 - [Events](#events)
+- [Custom Types](#custom-types)
 - [Jobs](#jobs)
 - [Batch Requests](#batch-requests)
 - [Error Handling](#error-handling)
@@ -1173,6 +1174,34 @@ Events have no `gid`; every property is nullable.
 | `parent` | `?CompactResource` | Parent of the changed resource |
 | `created_at` | `?string` | Event timestamp |
 | `change` | `?array` | Field-level change (`field`, `action`, `new_value`, `added_value`, `removed_value`) |
+
+---
+
+### Custom Types
+
+Access via `Asana::customTypes()` — returns `CustomTypeResource`. Custom types are read-only through the API; pass exactly one of `projectGid` or `workspaceGid` to `list`.
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `list` | `?string $projectGid = null`, `?string $workspaceGid = null`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List custom types in a project or workspace |
+| `get` | `string $gid`, `array $optFields = []` | `CustomTypeData` | Get a custom type |
+
+```php
+$types = Asana::customTypes()->list(projectGid: 'project_gid', optFields: ['name', 'status_options']);
+foreach ($types->data as $type) {
+    echo "{$type->name}: " . count($type->status_options ?? []) . " statuses\n";
+}
+```
+
+#### CustomTypeData Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gid` | `string` | Globally unique identifier |
+| `resource_type` | `?string` | Always `"custom_type"` |
+| `name` | `?string` | Type name |
+| `asana_created_type_identifier` | `?string` | Set for Asana-provided types (e.g. `"bug"`), `null` for user-created |
+| `status_options` | `?array` | Status options (`gid`, `name`, `enabled`, `color`, `completion_state`) |
 
 ---
 
