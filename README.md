@@ -522,6 +522,12 @@ Access via `Asana::users()` — returns `UserResource`.
 | `getForWorkspace` | `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | List users in a workspace |
 | `getForTeam` | `string $teamGid`, `array $optFields = []` | `PaginatedResponse` | List users in a team |
 | `me` | `array $optFields = []` | `UserData` | Get the authenticated user |
+| `update` | `string $gid`, `array $data`, `?string $workspaceGid = null`, `array $optFields = []` | `UserData` | Update a user (`name`, `custom_fields`); pass `$workspaceGid` when setting workspace-scoped custom fields |
+| `getFavorites` | `string $userGid`, `string $resourceType`, `string $workspaceGid`, `?string $offset = null`, `?int $limit = null`, `array $optFields = []` | `PaginatedResponse` | The user's sidebar favorites of one type (`project`, `portfolio`, `tag`, `task`, `user`, `project_template`); current user only (items are `CompactResource`) |
+| `getInWorkspace` | `string $workspaceGid`, `string $userGid`, `array $optFields = []` | `UserData` | Get a user as seen in one workspace |
+| `updateInWorkspace` | `string $workspaceGid`, `string $userGid`, `array $data`, `array $optFields = []` | `UserData` | Update a user within one workspace |
+| `getTeamMemberships` | `string $userGid`, `string $workspaceGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | The user's team memberships in a workspace (items are `TeamMembershipData`) |
+| `getWorkspaceMemberships` | `string $userGid`, `array $optFields = []`, `?string $offset = null`, `?int $limit = null` | `PaginatedResponse` | The user's workspace memberships (items are `WorkspaceMembershipData`) |
 
 ```php
 // Get the authenticated user
@@ -537,6 +543,17 @@ $users = Asana::users()->getForWorkspace('workspace_gid');
 
 // List users in a team
 $users = Asana::users()->getForTeam('team_gid');
+// Rename the current user
+Asana::users()->update('me', ['name' => 'Jane Doe']);
+
+// Favourite projects in a workspace
+$favorites = Asana::users()->getFavorites('me', 'project', 'workspace_gid');
+
+// Which teams is a user on, and where are they admin?
+$memberships = Asana::users()->getTeamMemberships('user_gid', 'workspace_gid');
+foreach ($memberships->data as $membership) {
+    echo "{$membership->team->name} admin=" . var_export($membership->is_admin, true);
+}
 ```
 
 #### UserData Properties

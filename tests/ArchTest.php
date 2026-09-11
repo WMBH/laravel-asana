@@ -292,6 +292,32 @@ arch('TypeaheadRequest sends GET')
     ->expect('WMBH\Asana\Requests\Workspaces\TypeaheadRequest')
     ->toSendGetRequest();
 
+arch('UpdateUserRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\Users\UpdateUserRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('UpdateUserForWorkspaceRequest sends PUT with JSON body')
+    ->expect('WMBH\Asana\Requests\Users\UpdateUserForWorkspaceRequest')
+    ->toSendPutRequest()
+    ->toHaveJsonBody();
+
+arch('GetFavoritesForUserRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Users\GetFavoritesForUserRequest')
+    ->toSendGetRequest();
+
+arch('GetUserForWorkspaceRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Users\GetUserForWorkspaceRequest')
+    ->toSendGetRequest();
+
+arch('GetTeamMembershipsForUserRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Teams\GetTeamMembershipsForUserRequest')
+    ->toSendGetRequest();
+
+arch('GetWorkspaceMembershipsForUserRequest sends GET')
+    ->expect('WMBH\Asana\Requests\Workspaces\GetWorkspaceMembershipsForUserRequest')
+    ->toSendGetRequest();
+
 // ── Resources ───────────────────────────────────────────────────────
 
 arch('all resources have Resource suffix')
